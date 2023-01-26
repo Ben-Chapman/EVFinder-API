@@ -1,40 +1,8 @@
 import asyncio
 import json
-import logging
 import time
 
-from fastapi import Response
 from functools import partial, wraps
-
-
-def send_response(
-    response: Response,
-    response_data: dict,
-    content_type: str,
-    cache_control_age: int,
-    status_code: int = 200,
-):
-    response.status_code = status_code
-    response.headers = {
-        "Content-Type": content_type,
-        "Cache-Control": f"public, max-age={str(cache_control_age)}, immutable",
-    }
-    return response_data
-
-
-def send_error_response(
-    response: Response, error_message: str, error_data: str, status_code: int = 500
-):
-    response.status_code = status_code
-    response.headers = {
-        "Content-Type": "text/plain",
-        "Cache-Control": "public, max-age=0, immutable",
-    }
-
-    # Logging this error
-    logging.warning(f"{error_message}: {error_data}")
-
-    return response
 
 
 def validate_request(input_data):
