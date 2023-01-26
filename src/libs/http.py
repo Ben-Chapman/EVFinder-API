@@ -1,5 +1,6 @@
 import httpx
 
+from fastapi import Response
 from tenacity import (
     RetryError,
     retry,
@@ -9,7 +10,7 @@ from tenacity import (
     retry_if_exception_type,
 )
 
-# from libs.libs import async_timeit
+from libs.libs import async_timeit
 
 
 class AsyncHTTPClient:
@@ -37,7 +38,7 @@ class AsyncHTTPClient:
     async def __aexit__(self, exception_type, exception_value, traceback):
         await self.client.aclose()
 
-    # @async_timeit
+    @async_timeit
     @retry(
         stop=(stop_after_delay(15) | stop_after_attempt(5)),
         wait=wait_random(min=1, max=3),
@@ -49,7 +50,7 @@ class AsyncHTTPClient:
         except RetryError as e:
             return e
 
-    # @async_timeit
+    @async_timeit
     @retry(
         stop=(stop_after_delay(15) | stop_after_attempt(5)),
         wait=wait_random(min=1, max=3),
@@ -60,3 +61,18 @@ class AsyncHTTPClient:
             return await self.client.post(uri, headers=headers, json=post_data)
         except RetryError as e:
             return e
+
+
+def send_response(
+    response: Response,
+    response_data: dict,
+    content_type: str,
+    cache_control_age: int,
+    status_code: int = 200,
+):
+    response.status_code = status_code
+    response.headers = {
+        "Content-Type": content_type,
+        "Cache-Control": f"public, max-age={str(cache_control_age)}, immutable",
+    }
+    return response_data
