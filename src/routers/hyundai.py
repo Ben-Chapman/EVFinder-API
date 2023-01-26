@@ -1,8 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from libs.common_query_params import CommonInventoryQueryParams
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
-@router.get("/users")
-def list_users():
-    return {"users": ["a", "b", "c"]}
+@router.get("/inventory/hyundai")
+async def testing(params: CommonInventoryQueryParams = Depends()):
+
+    return params.zip, params.year
