@@ -1,6 +1,7 @@
 import httpx
 
-from fastapi import Response
+from fastapi.responses import JSONResponse
+
 from tenacity import (
     RetryError,
     retry,
@@ -64,15 +65,11 @@ class AsyncHTTPClient:
 
 
 def send_response(
-    response: Response,
     response_data: dict,
-    content_type: str,
-    cache_control_age: int,
+    cache_control_age: int = 3600,
     status_code: int = 200,
 ):
-    response.status_code = status_code
-    response.headers = {
-        "Content-Type": content_type,
+    headers = {
         "Cache-Control": f"public, max-age={str(cache_control_age)}, immutable",
     }
-    return response_data
+    return JSONResponse(content=response_data, headers=headers, status_code=status_code)
