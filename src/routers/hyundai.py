@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Request
 
-from libs.common_query_params import CommonInventoryQueryParams
-from libs.exceptions import error_response
-from libs.http import AsyncHTTPClient, send_response
+from src.libs.common_query_params import CommonInventoryQueryParams
+from src.libs.exceptions import error_response
+from src.libs.http import AsyncHTTPClient, send_response
 
 router = APIRouter(prefix="/api")
 
