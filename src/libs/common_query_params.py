@@ -9,26 +9,26 @@ class CommonInventoryQueryParams:
     """
 
     valid_models = [
-        "Ioniq(%20|\+|\s)5",  # noqa: W605
-        "Ioniq(%20|\+|\s)6",  # noqa: W605
-        "Ioniq(%20|\+|\s)Phev",  # noqa: W605
-        "Kona(%20|\+|\s)Ev",  # noqa: W605
-        "Santa(%20|\+|\s)Fe(%20|\+|\s)Phev",  # noqa: W605
-        "Tucson(%20|\+|\s)Phev",  # noqa: W605
-        "N",  # EV6
-        "V",  # Niro EV
-        "F",  # Niro Plug-in Hybrid
-        "R",  # Sportage Plug-in Hybrid
-        "T",  # Sorento Plug-in Hybrid
-        "GV60",  # Genesis GV60
-        "ElectrifiedG80",  # Genesis Electrified G80
-        "ID.4",  # VW ID.4
-        "mache",  # Ford Mustang Mach-E
-        "Bolt EV",  # Chevrolet Bolt EV
-        "Bolt EUV",  # Chevrolet Bolt EUV
-        "etron",  # Audi e-tron
-        "etrongt",  # Audi e-tron GT
-        "q4",  # Audi Q4 e-tron
+        "^Ioniq(%20|\+|\s)6$",  # noqa: W605
+        "^Ioniq(%20|\+|\s)5$",  # noqa: W605
+        "^Ioniq(%20|\+|\s)Phev$",  # noqa: W605
+        "^Kona(%20|\+|\s)Ev$",  # noqa: W605
+        "^Santa(%20|\+|\s)Fe(%20|\+|\s)Phev$",  # noqa: W605
+        "^Tucson(%20|\+|\s)Phev$",  # noqa: W605
+        "^N$",  # EV6
+        "^V$",  # Niro EV
+        "^F$",  # Niro Plug-in Hybrid
+        "^R$",  # Sportage Plug-in Hybrid
+        "^T$",  # Sorento Plug-in Hybrid
+        "^GV60$",  # Genesis GV60
+        "^ElectrifiedG80$",  # Genesis Electrified G80
+        "^ID.4$",  # VW ID.4
+        "^mache$",  # Ford Mustang Mach-E
+        "^Bolt EV$",  # Chevrolet Bolt EV
+        "^Bolt EUV$",  # Chevrolet Bolt EUV
+        "^etron$",  # Audi e-tron
+        "^etrongt$",  # Audi e-tron GT
+        "^q4$",  # Audi Q4 e-tron
     ]
 
     def __init__(
