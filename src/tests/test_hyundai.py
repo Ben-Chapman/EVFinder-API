@@ -9,7 +9,13 @@ client = TestClient(app)
 vcr = program_vcr()
 
 
-@pytest.fixture(name="test_cassette", params=["Ioniq%205"])
+@pytest.fixture(
+    scope="module",
+    name="test_cassette",
+    params=[
+        "Ioniq%205",
+    ],
+)
 def _test_cassette(request):
     fake = Faker()
     vehicle_model = request.param
