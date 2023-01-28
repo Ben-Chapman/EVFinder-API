@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Request
 
 from src.libs.common_query_params import CommonInventoryQueryParams
-from src.libs.exceptions import error_response
-from src.libs.http import AsyncHTTPClient, send_response
+from src.libs.responses import error_response, send_response
+from src.libs.http import AsyncHTTPClient
 
 router = APIRouter(prefix="/api")
 
@@ -11,13 +11,10 @@ router = APIRouter(prefix="/api")
 async def testing(
     req: Request, req_params: CommonInventoryQueryParams = Depends()
 ) -> dict:
-    # api_url = (
-    #     "https://www.hyundaiusa.com/var/hyundai/services/inventory/vehicleList.json"
-    # )
     params = {
         "zip": req_params.zip,
         "year": req_params.year,
-        "model": "Ioniq%205",
+        "model": req_params.model,
         "radius": req_params.radius,
     }
     headers = {
