@@ -1,7 +1,5 @@
 import httpx
 
-from fastapi.responses import JSONResponse
-
 from tenacity import (
     RetryError,
     retry,
@@ -17,10 +15,10 @@ from src.libs.libs import async_timeit
 class AsyncHTTPClient:
     def __init__(
         self,
-        base_url,
-        timeout_value,
-        use_http2=False,
-        verify=True,
+        base_url: str,
+        timeout_value: int,
+        use_http2: bool = True,
+        verify: bool = True,
     ):
         self.base_url = base_url
         self.timeout_value = timeout_value
@@ -45,7 +43,7 @@ class AsyncHTTPClient:
         wait=wait_random(min=1, max=3),
         retry=retry_if_exception_type(httpx.HTTPStatusError),
     )
-    async def get(self, uri, headers, params):
+    async def get(self, uri: str, headers: dict, params: dict | None = None):
         try:
             return await self.client.get(uri, headers=headers, params=params)
         except RetryError as e:
@@ -57,19 +55,8 @@ class AsyncHTTPClient:
         wait=wait_random(min=1, max=3),
         retry=retry_if_exception_type(httpx.HTTPStatusError),
     )
-    async def post(self, uri, headers, post_data):
+    async def post(self, uri: str, headers: dict, post_data: dict):
         try:
             return await self.client.post(uri, headers=headers, json=post_data)
         except RetryError as e:
             return e
-
-
-def send_response(
-    response_data: dict,
-    cache_control_age: int = 3600,
-    status_code: int = 200,
-):
-    headers = {
-        "Cache-Control": f"public, max-age={str(cache_control_age)}, immutable",
-    }
-    return JSONResponse(content=response_data, headers=headers, status_code=status_code)
