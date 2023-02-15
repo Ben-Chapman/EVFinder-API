@@ -1,13 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.routers import genesis, hyundai, kia
+from src.routers import genesis, hyundai, kia, volkswagen
 
 app = FastAPI()
 
 app.include_router(genesis.router)
 app.include_router(hyundai.router)
 app.include_router(kia.router)
+app.include_router(volkswagen.router)
 
 # CORS support
 origins = [
