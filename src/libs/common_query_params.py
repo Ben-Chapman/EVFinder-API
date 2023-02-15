@@ -10,8 +10,8 @@ class CommonInventoryQueryParams:
     """
 
     valid_models = [
-        "^Ioniq(%20|\+|\s)6$",  # Hyundai Ioniq 6  # noqa: W605
-        "^Ioniq(%20|\+|\s)5$",  # Hyundai Ioniq 5  # noqa: W605
+        "^Ioniq(%20|\+|\s|\-)5$",  # Hyundai Ioniq 5  # noqa: W605
+        "^Ioniq(%20|\+|\s|\-)6$",  # Hyundai Ioniq 6  # noqa: W605
         "^Ioniq(%20|\+|\s)Phev$",  # Hyundai Ioniq Phev  # noqa: W605
         "^Kona(%20|\+|\s)Ev$",  # Hyundai Kona EV  # noqa: W605
         "^Santa(%20|\+|\s)Fe(%20|\+|\s)Phev$",  # Hyundai Santa Fe Phev  # noqa: W605
@@ -46,3 +46,23 @@ class CommonInventoryQueryParams:
         self.year = year
         self.radius = radius
         self.model = model
+
+
+class CommonVinQueryParams:
+    """Defining the query parameters which are common across all inventory API calls.
+
+    When included in a Fast API route, Fast API will use this class to validate that all
+    query params are present in the request, and they validate through Query() rules.
+    https://fastapi.tiangolo.com/tutorial/dependencies/classes-as-dependencies/#classes-as-dependencies
+    """
+
+    valid_models = CommonInventoryQueryParams.valid_models
+
+    def __init__(
+        self,
+        vin: str,
+    ):
+
+        self.vin = vin
+        self.year = CommonInventoryQueryParams.year
+        self.model = CommonInventoryQueryParams.model
