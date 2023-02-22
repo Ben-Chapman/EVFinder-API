@@ -21,7 +21,7 @@ def error_response(
     # Logging this error
     # logging.warning(f"{error_message}: {error_data}")
 
-    return HTTPException(
+    raise HTTPException(
         status_code=status_code,
         detail={"errorMessage": error_message, "errorData": error_data},
     )
