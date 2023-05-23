@@ -5,17 +5,18 @@ from src.libs.responses import error_response, send_response
 from src.libs.http import AsyncHTTPClient
 
 router = APIRouter(prefix="/api")
+verify_ssl = True
+hyundai_base_url = "https://www.hyundaiusa.com"
 
 
 @router.get("/inventory/hyundai")
 async def get_hyundai_inventory(
     req: Request, req_params: CommonInventoryQueryParams = Depends()
 ) -> dict:
-
     params = {
         "zip": req_params.zip,
         "year": req_params.year,
-        "model": req_params.model.replace(" ", "-"),
+        "model": req_params.model.replace("%20", "-"),
         "radius": req_params.radius,
     }
     headers = {
@@ -25,42 +26,46 @@ async def get_hyundai_inventory(
 
     # Make a call to the Hyundai API
     async with AsyncHTTPClient(
-        base_url="https://www.hyundaiusa.com", timeout_value=30, verify=False
+        base_url=hyundai_base_url, timeout_value=30, verify=verify_ssl
     ) as http:
         g = await http.get(
             uri="/var/hyundai/services/inventory/vehicleList.json",
             headers=headers,
             params=params,
         )
+    try:
         inventory = g.json()
-        # Ensure the response back from the API has some status, indicating a successful
-        # API call
-        try:
-            inventory["status"]
-        except KeyError:
-            return error_response(
-                error_message="Invalid data received from the Hyundai API",
-                error_data=inventory,
-                status_code=500,
-            )
+    except ValueError:
+        return error_response(
+            error_message=f"An error occurred with the Hyundai API: {g.text}"
+        )
+    # Ensure the response back from the API has some status, indicating a successful
+    # API call
+    try:
+        inventory["status"]
+    except KeyError:
+        return error_response(
+            error_message="Invalid data received from the Hyundai API",
+            error_data=inventory,
+            status_code=500,
+        )
 
-        if "SUCCESS" in inventory["status"]:
-            return send_response(response_data=inventory)
-        else:
-            return error_response(
-                error_message="Received invalid data from the Hyundai API",
-                error_data=inventory,
-                status_code=400,
-            )
+    if "SUCCESS" in inventory["status"]:
+        return send_response(response_data=inventory)
+    else:
+        return error_response(
+            error_message="Received invalid data from the Hyundai API",
+            error_data=inventory,
+            status_code=400,
+        )
 
 
 @router.get("/vin")
 @router.get("/vin/hyundai")
 async def get_hyundai_vin_detail(req: Request) -> dict:
-
     # Make a call to the Hyundai API
     async with AsyncHTTPClient(
-        base_url="https://www.hyundaiusa.com", timeout_value=30
+        base_url=hyundai_base_url, timeout_value=30, verify=verify_ssl
     ) as http:
         params = {
             "model": req.query_params.get("model"),
@@ -72,7 +77,7 @@ async def get_hyundai_vin_detail(req: Request) -> dict:
             "authority": "www.hyundaiusa.com",
             "User-Agent": req.headers.get("User-Agent"),
             "referer": (
-                f"https://www.hyundaiusa.com/us/en/inventory-search/details?"
+                f"{hyundai_base_url}/us/en/inventory-search/details?"
                 f"model={params['model'].capitalize()}&year={params['year']}&vin={params['vin']}"
             ),
         }
