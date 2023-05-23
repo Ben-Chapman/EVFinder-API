@@ -22,7 +22,8 @@ class CommonInventoryQueryParams:
         "^R$",  # Kia Sportage Plug-in Hybrid
         "^T$",  # Kia Sorento Plug-in Hybrid
         "^GV60$",  # Genesis GV60
-        "^ElectrifiedG80$",  # Genesis Electrified G80
+        "^ELECTRIFIED-G80$",  # Genesis Electrified G80
+        "^ELECTRIFIED-GV70$",  # Genesis Electrified GV70
         "^ID.4$",  # VW ID.4
         "^mache$",  # Ford Mustang Mach-E
         "^Bolt EV$",  # Chevrolet Bolt EV
@@ -62,7 +63,6 @@ class CommonVinQueryParams:
         self,
         vin: str,
     ):
-
         self.vin = vin
         self.year = CommonInventoryQueryParams.year
         self.model = CommonInventoryQueryParams.model
