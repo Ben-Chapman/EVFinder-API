@@ -31,6 +31,9 @@ class CommonInventoryQueryParams:
         "^etron$",  # Audi e-tron
         "^etrongt$",  # Audi e-tron GT
         "^q4$",  # Audi Q4 e-tron
+        "^i4$",  # BMW i4
+        "^i7$",  # BMW i7
+        "^iX$",  # BMW ix
     ]
 
     def __init__(

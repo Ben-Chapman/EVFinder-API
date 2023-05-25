@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.routers import audi, chevrolet, genesis, hyundai, kia, volkswagen
+from src.routers import audi, bmw, chevrolet, genesis, hyundai, kia, volkswagen
 
 app = FastAPI()
 
+app.include_router(bmw.router)
 app.include_router(audi.router)
 app.include_router(chevrolet.router)
 app.include_router(genesis.router)
