@@ -15,6 +15,11 @@ async def get_manufacturer_inventory(
 ) -> dict:
     """A description of what's unique about the logic for this manufacturer's API"""
 
+    # zip_code = common_params.zip
+    # year = common_params.year
+    # model = common_params.model
+    # radius = common_params.radius
+
     headers = {
         "User-Agent": req.headers.get("User-Agent"),
     }
