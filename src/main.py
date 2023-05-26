@@ -1,11 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import hyundai
+from src.routers import logger
+from src.routers import audi, bmw, chevrolet, ford, genesis, hyundai, kia, volkswagen
 
-app = FastAPI()
+app = FastAPI(docs_url=None, redoc_url=None)
 
+app.include_router(bmw.router)
+app.include_router(audi.router)
+app.include_router(chevrolet.router)
+app.include_router(ford.router)
+app.include_router(genesis.router)
 app.include_router(hyundai.router)
+app.include_router(kia.router)
+app.include_router(volkswagen.router)
+
+app.include_router(logger.router)
 
 # CORS support
 origins = [
@@ -20,6 +30,6 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )

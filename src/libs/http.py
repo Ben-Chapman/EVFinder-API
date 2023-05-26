@@ -9,16 +9,16 @@ from tenacity import (
     retry_if_exception_type,
 )
 
-# from libs.libs import async_timeit
+from src.libs.libs import async_timeit
 
 
 class AsyncHTTPClient:
     def __init__(
         self,
-        base_url,
-        timeout_value,
-        use_http2=False,
-        verify=True,
+        base_url: str,
+        timeout_value: int,
+        use_http2: bool = True,
+        verify: bool = True,
     ):
         self.base_url = base_url
         self.timeout_value = timeout_value
@@ -37,25 +37,25 @@ class AsyncHTTPClient:
     async def __aexit__(self, exception_type, exception_value, traceback):
         await self.client.aclose()
 
-    # @async_timeit
+    @async_timeit
     @retry(
         stop=(stop_after_delay(15) | stop_after_attempt(5)),
         wait=wait_random(min=1, max=3),
         retry=retry_if_exception_type(httpx.HTTPStatusError),
     )
-    async def get(self, uri, headers, params):
+    async def get(self, uri: str, headers: dict, params: dict | None = None):
         try:
             return await self.client.get(uri, headers=headers, params=params)
         except RetryError as e:
             return e
 
-    # @async_timeit
+    @async_timeit
     @retry(
         stop=(stop_after_delay(15) | stop_after_attempt(5)),
         wait=wait_random(min=1, max=3),
         retry=retry_if_exception_type(httpx.HTTPStatusError),
     )
-    async def post(self, uri, headers, post_data):
+    async def post(self, uri: str, headers: dict, post_data: dict):
         try:
             return await self.client.post(uri, headers=headers, json=post_data)
         except RetryError as e:
