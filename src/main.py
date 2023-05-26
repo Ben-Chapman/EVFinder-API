@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.routers import logger
 from src.routers import audi, bmw, chevrolet, ford, genesis, hyundai, kia, volkswagen
 
-app = FastAPI()
+app = FastAPI(docs_url=None, redoc_url=None)
 
 app.include_router(bmw.router)
 app.include_router(audi.router)
