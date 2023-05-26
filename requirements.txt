@@ -1,4 +1,5 @@
 fastapi==0.95.2
+google-cloud-error-reporting==1.9.1
 google-cloud-logging==3.5.0
 httpx[http2]==0.24.1
 tenacity==8.2.2
