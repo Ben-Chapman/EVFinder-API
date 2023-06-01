@@ -1,28 +1,43 @@
 steps:
   # Install dependencies
-  - name: python
-    entrypoint: pip
-    args: ["install", "-r", "requirements.txt"]
+  # - name: python
+  #   entrypoint: pip
+  #   args: ["install", "-r", "requirements.txt"]
 
-  # Docker Build
-  - name: "gcr.io/cloud-builders/docker"
-    args:
-      [
-        "build",
-        "-t",
-        "us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/evfinder-api:${SHORT_SHA}",
-        ".",
-      ]
+  # # Docker Build
+  # - name: "gcr.io/cloud-builders/docker"
+  #   args:
+  #     [
+  #       "build",
+  #       "-t",
+  #       "us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/evfinder-api:${SHORT_SHA}",
+  #       ".",
+  #     ]
 
-  # Docker push to Google Artifact Registry
-  - name: "gcr.io/cloud-builders/docker"
-    args:
-      [
-        "push",
-        "us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/evfinder-api:${SHORT_SHA}",
-      ]
+  # # Docker push to Google Artifact Registry
+  # - name: "gcr.io/cloud-builders/docker"
+  #   args:
+  #     [
+  #       "push",
+  #       "us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/evfinder-api:${SHORT_SHA}",
+  #     ]
 
   # Deploy to Cloud Run
+  # - name: google/cloud-sdk
+  #   args:
+  #     [
+  #       "gcloud",
+  #       "run",
+  #       "deploy",
+  #       "api",
+  #       "--image=us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/evfinder-api:${SHORT_SHA}",
+  #       "--region",
+  #       "us-central1",
+  #       "--platform",
+  #       "managed",
+  #       "--allow-unauthenticated",
+  #     ]
+  # Build and Deploy to Cloud Run
   - name: google/cloud-sdk
     args:
       [
@@ -30,17 +45,16 @@ steps:
         "run",
         "deploy",
         "api",
-        "--image=us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/evfinder-api:${SHORT_SHA}",
-        "--region",
-        "us-central1",
+        "--source",
+        ".",
         "--platform",
         "managed",
         "--allow-unauthenticated",
       ]
-
+# gcloud run deploy api --source .
 # Store images in Google Artifact Registry
-images:
-  - us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/evfinder-api:${SHORT_SHA}
+# images:
+#   - us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/evfinder-api:${SHORT_SHA}
 
 options:
   logging: CLOUD_LOGGING_ONLY
