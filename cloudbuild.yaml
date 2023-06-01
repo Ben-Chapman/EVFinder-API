@@ -47,6 +47,8 @@ steps:
         "api",
         "--source",
         ".",
+        "--region",
+        "us-central1",
         "--platform",
         "managed",
         "--allow-unauthenticated",
