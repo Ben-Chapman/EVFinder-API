@@ -5,7 +5,7 @@ from libs.responses import error_response, send_response
 from libs.http import AsyncHTTPClient
 
 router = APIRouter(prefix="/api")
-verify_ssl = True
+verify_ssl = False
 vw_base_url = "https://api.vw.com/graphql"
 
 
