@@ -9,6 +9,7 @@ from routers import (
     chevrolet,
     ford,
     genesis,
+    helpers,
     hyundai,
     kia,
     logger,
@@ -26,6 +27,7 @@ app.include_router(hyundai.router)
 app.include_router(kia.router)
 app.include_router(volkswagen.router)
 
+app.include_router(helpers.router)
 app.include_router(logger.router)
 
 # CORS support
