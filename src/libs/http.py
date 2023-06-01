@@ -9,7 +9,7 @@ from tenacity import (
     retry_if_exception_type,
 )
 
-from src.libs.libs import async_timeit
+from libs.libs import async_timeit
 
 
 class AsyncHTTPClient:

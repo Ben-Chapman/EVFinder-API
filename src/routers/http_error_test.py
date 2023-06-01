@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Path
-from src.libs.exceptions import error_response
+from libs.exceptions import error_response
 
 
 router = APIRouter()

@@ -1,8 +1,12 @@
 Dockerfile
-README.md
+*.md
+*.png
 _.ipynb_
 _.pyc
 _.pyo
-\*.pyd
-**__pycache__**
+*.pyd
+**pycache**
 .pytest_cache
+**tests**
+**cloudbuild.yaml
+**.vscode**

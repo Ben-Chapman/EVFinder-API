@@ -1,8 +1,19 @@
+#!/usr/bin/python3
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.routers import logger
-from src.routers import audi, bmw, chevrolet, ford, genesis, hyundai, kia, volkswagen
+from routers import (
+    audi,
+    bmw,
+    chevrolet,
+    ford,
+    genesis,
+    hyundai,
+    kia,
+    logger,
+    volkswagen,
+)
 
 app = FastAPI(docs_url=None, redoc_url=None)
 
@@ -33,3 +44,9 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+
+if __name__ == "__main__":
+    config = uvicorn.Config("main:app", host="0.0.0.0", port=8080, log_level="info")
+    server = uvicorn.Server(config)
+    server.run()

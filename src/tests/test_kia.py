@@ -2,8 +2,8 @@ import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 
-from src.tests.test_helpers import program_vcr
-from src.main import app
+from tests.test_helpers import program_vcr
+from main import app
 
 client = TestClient(app)
 vcr = program_vcr()

@@ -1,14 +1,11 @@
 FROM python:3.10-slim
 
-ENV APP_HOME /app
+ENV APP_HOME /api
 WORKDIR $APP_HOME
+
 COPY requirements.txt .
-COPY ./src* $APP_HOME/
+COPY src $APP_HOME/src
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# We're just copying the src directory into this container, so adjusting the imports
-# to reflect this different directory layout
-RUN sed -i 's/from src./from /g' *.py
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python3", "src/main.py"]
