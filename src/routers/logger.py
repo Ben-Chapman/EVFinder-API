@@ -1,5 +1,4 @@
-import google.cloud.logging
-from fastapi import APIRouter
+from fastapi import status, APIRouter, BackgroundTasks
 from google.cloud import error_reporting
 from pydantic import BaseModel
 
@@ -12,27 +11,32 @@ class ErrorMessage(BaseModel):
 router = APIRouter(prefix="/api")
 
 
-# Setup info level logging to GCP Cloud Logging
-client = google.cloud.logging.Client()
-gcp_logger = client.logger(name="evfinder")
-
-
-@router.post("/logger/error")
-async def get_manufacturer_inventory(error: ErrorMessage) -> dict:
+@router.post(
+    "/logger/error",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def accept_application_error(
+    error: ErrorMessage,
+    background_tasks: BackgroundTasks,
+) -> dict:
     """A helper function which accepts an error log message and writes that message to
-    GCP Error Reporting.
+    GCP Error Reporting through the send_error_to_gcp() background task.
 
-    This function can be called directly through send_gcp_error_message() which accepts
-    one argument, a string containing the message to be logged.
+    This API endpoint accepts a POST request containing a JSON body with the information
+    to be logged. Regardless of logging success/failure a 200/OK is returned. This was
+    designed to be fire and forget, so the actual response back to the caller isn't used.
 
     Keyword arguments:
     errorMessage -- the error message to be logged
 
-    This is also exposed through /api/logger/error, which accepts a POST request
-    containing a JSON body with the information to be logged. Regardless of logging
-    success/failure a 200/OK is returned. This was designed to be fire and forget, so the
-    actual response back to the caller isn't used.
+
     """
+    background_tasks.add_task(send_error_to_gcp, error)
+    return {"status": "OK"}
+
+
+def send_error_to_gcp(error):
+    """A FastAPI Background task which sends the error to GCP Error Reporting"""
 
     # Setup error logging to GCP Error Reporting
     error_client = error_reporting.Client(version=error.additionalData["appVersion"])
@@ -47,5 +51,3 @@ async def get_manufacturer_inventory(error: ErrorMessage) -> dict:
         message=f"{error.errorMessage} {error.additionalData}",
         http_context=http_context,
     )
-
-    return {"status": "OK"}
