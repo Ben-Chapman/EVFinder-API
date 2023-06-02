@@ -2,7 +2,7 @@ import pytest
 from fastapi import Depends
 from fastapi.testclient import TestClient
 
-from libs.common_query_params import CommonInventoryQueryParams
+from src.libs.common_query_params import CommonInventoryQueryParams
 from tests.test_helpers import generate_test_query_params
 from main import app
 

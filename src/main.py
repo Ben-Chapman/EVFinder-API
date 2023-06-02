@@ -1,9 +1,8 @@
 #!/usr/bin/python3
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import (
+from src.routers import (
     audi,
     bmw,
     chevrolet,
@@ -48,7 +47,7 @@ app.add_middleware(
 )
 
 
-if __name__ == "__main__":
-    config = uvicorn.Config("main:app", host="0.0.0.0", port=8080, log_level="info")
-    server = uvicorn.Server(config)
-    server.run()
+# if __name__ == "__main__":
+#     config = uvicorn.Config("main:app", host="0.0.0.0", port=8080, log_level="info")
+#     server = uvicorn.Server(config)
+#     server.run()

@@ -15,6 +15,9 @@ steps:
         "us-central1",
         "--platform",
         "managed",
+        "--execution-environment",
+        "gen1",
+        "--cpu-boost",
         "--allow-unauthenticated",
       ]
 
