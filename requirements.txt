@@ -1,4 +1,4 @@
-fastapi==0.95.2
+fastapi==0.96.0
 google-cloud-error-reporting==1.9.1
 gunicorn==20.1.0
 httpx[http2]==0.24.1
