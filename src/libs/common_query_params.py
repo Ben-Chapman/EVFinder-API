@@ -33,7 +33,7 @@ class CommonInventoryQueryParams:
         "^q4$",  # Audi Q4 e-tron
         "^i4$",  # BMW i4
         "^i7$",  # BMW i7
-        "^iX$",  # BMW ix
+        "^9$",  # BMW ix
         "^mache$",  # Ford Mustang Mach-E
     ]
 
