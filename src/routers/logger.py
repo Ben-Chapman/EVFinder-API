@@ -1,5 +1,6 @@
 from fastapi import status, APIRouter, BackgroundTasks
-from google.cloud import error_reporting
+
+# from google.cloud import error_reporting
 from pydantic import BaseModel
 
 
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/api")
 async def accept_application_error(
     error: ErrorMessage,
     background_tasks: BackgroundTasks,
-) -> dict:
+):
     """A helper function which accepts an error log message and writes that message to
     GCP Error Reporting through the send_error_to_gcp() background task.
 
@@ -37,6 +38,8 @@ async def accept_application_error(
 
 def send_error_to_gcp(error):
     """A FastAPI Background task which sends the error to GCP Error Reporting"""
+
+    from google.cloud import error_reporting
 
     # Setup error logging to GCP Error Reporting
     error_client = error_reporting.Client(version=error.additionalData["appVersion"])
