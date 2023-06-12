@@ -12,6 +12,8 @@ powerful website to allow prospective electric vehicle (EV) buyers a way to view
 available EV inventory for all electric and plug-in hybrid vehicles currently on
 the market.
 
+This repo contains the backend API services for the EV Finder.
+
 ## How can I help?
 
 There's a variety of ways to help out:
