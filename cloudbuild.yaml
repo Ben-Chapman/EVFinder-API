@@ -1,5 +1,24 @@
 steps:
-  # Build and Deploy to Cloud Run
+  # Build the EV Finder API container image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:$COMMIT_SHA",
+        ".",
+      ]
+
+  # Push to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:$COMMIT_SHA",
+      ]
+    id: "docker push"
+
+    # Build and Deploy the API to Cloud Run
   - name: google/cloud-sdk
     args:
       [
@@ -7,8 +26,8 @@ steps:
         "run",
         "deploy",
         "api",
-        "--source",
-        ".",
+        "--image",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:$COMMIT_SHA",
         "--set-env-vars",
         "VERSION=${TAG_NAME}",
         "--region",
@@ -23,6 +42,53 @@ steps:
         "--use-http2",
         "--allow-unauthenticated",
       ]
+    id: "deploy main api"
+    waitFor:
+      - "docker push"
+
+  # Build and deploy the Ford API
+  - name: google/cloud-sdk
+    args:
+      [
+        "gcloud",
+        "run",
+        "deploy",
+        "ford-api",
+        "--image",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:$COMMIT_SHA",
+        "--set-env-vars",
+        "VERSION=${TAG_NAME}",
+        "--region",
+        "us-central1",
+        "--platform",
+        "managed",
+        "--execution-environment",
+        "gen1",
+        "--cpu-boost",
+        "--memory",
+        "512Mi",
+        "--use-http2",
+        "--allow-unauthenticated",
+      ]
+    id: "deploy ford api"
+    waitFor:
+      - "docker push"
+
+  # Swing traffic over to the newly deploy API
+  - name: google/cloud-sdk
+    args: ["gcloud", "run", "services", "update-traffic", "api", "--to-latest"]
+    waitFor:
+      - "deploy main api"
+
+  # Swing traffic over to the newly deploy Ford API
+  - name: google/cloud-sdk
+    args:
+      ["gcloud", "run", "services", "update-traffic", "ford-api", "--to-latest"]
+    waitFor:
+      - "deploy ford api"
+
+images:
+  - "us-central1-docker.pkg.dev/evfinder/evfinder-api/evfinder-api:$COMMIT_SHA"
 
 options:
   logging: CLOUD_LOGGING_ONLY
