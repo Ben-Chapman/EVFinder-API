@@ -1,6 +1,5 @@
 fastapi==0.96.0
 google-cloud-error-reporting==1.9.1
-gunicorn==20.1.0
+hypercorn[uvloop]==0.14.3
 httpx[http2]==0.24.1
 tenacity==8.2.2
-uvicorn[standard]==0.22.0
