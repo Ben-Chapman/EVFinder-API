@@ -11,7 +11,7 @@ on:
 jobs:
   flake8-lint:
     runs-on: ubuntu-latest
-    name: Lint with Flake8 and Black
+    name: Lint with Flake8
     steps:
       - name: Check out source repository
         uses: actions/checkout@v3
@@ -22,7 +22,7 @@ jobs:
       - name: flake8 Lint
         uses: TrueBrain/actions-flake8@v2
         with:
-          path: "api"
-          extra_arguments: "--config=src/.flake8"
+          path: "."
+          extra_arguments: "--config=.flake8"
           plugins: "flake8-bugbear flake8-black"
      
