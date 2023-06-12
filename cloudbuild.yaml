@@ -5,7 +5,7 @@ steps:
       [
         "build",
         "-t",
-        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:$COMMIT_SHA",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:${TAG_NAME}",
         ".",
       ]
 
@@ -14,7 +14,7 @@ steps:
     args:
       [
         "push",
-        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:$COMMIT_SHA",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:${TAG_NAME}",
       ]
     id: "docker push"
 
@@ -27,7 +27,7 @@ steps:
         "deploy",
         "api",
         "--image",
-        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:$COMMIT_SHA",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:${TAG_NAME}",
         "--set-env-vars",
         "VERSION=${TAG_NAME}",
         "--region",
@@ -55,7 +55,7 @@ steps:
         "deploy",
         "ford-api",
         "--image",
-        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:$COMMIT_SHA",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:${TAG_NAME}",
         "--set-env-vars",
         "VERSION=${TAG_NAME}",
         "--region",
@@ -76,19 +76,38 @@ steps:
 
   # Swing traffic over to the newly deploy API
   - name: google/cloud-sdk
-    args: ["gcloud", "run", "services", "update-traffic", "api", "--to-latest"]
+    args:
+      [
+        "gcloud",
+        "run",
+        "services",
+        "update-traffic",
+        "api",
+        "--to-latest",
+        "--region",
+        "us-central1",
+      ]
     waitFor:
       - "deploy main api"
 
   # Swing traffic over to the newly deploy Ford API
   - name: google/cloud-sdk
     args:
-      ["gcloud", "run", "services", "update-traffic", "ford-api", "--to-latest"]
+      [
+        "gcloud",
+        "run",
+        "services",
+        "update-traffic",
+        "ford-api",
+        "--to-latest",
+        "--region",
+        "us-central1",
+      ]
     waitFor:
       - "deploy ford api"
 
 images:
-  - "us-central1-docker.pkg.dev/evfinder/evfinder-api/evfinder-api:$COMMIT_SHA"
+  - "us-central1-docker.pkg.dev/evfinder/evfinder-api/evfinder-api:${TAG_NAME}"
 
 options:
   logging: CLOUD_LOGGING_ONLY
