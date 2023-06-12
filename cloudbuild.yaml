@@ -18,6 +18,9 @@ steps:
         "--execution-environment",
         "gen1",
         "--cpu-boost",
+        "--memory",
+        "512Mi",
+        "--use-http2",
         "--allow-unauthenticated",
       ]
 
