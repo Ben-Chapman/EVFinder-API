@@ -1,25 +1,17 @@
-FROM python:3.10-slim as builder
-ENV PYTHONUNBUFFERED 1
+FROM python:3.10-slim
 
-RUN python -m venv /venv
-ENV PATH="/venv/bin:$PATH"
+ENV API_HOME /api
+WORKDIR $API_HOME
 
-COPY ./requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt .
+COPY src $API_HOME/src
 
-
-FROM python:3.10-alpine
-WORKDIR /api
-RUN apk -U add python3
-COPY --from=builder /venv /venv
-
-ENV PATH="/venv/bin:$PATH"
-COPY src /api/src
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 CMD [ \
-  "gunicorn", "src.main:app", \
-  "--workers", "3", \
-  "--timeout", "0", \
-  "--worker-class", "uvicorn.workers.UvicornWorker", \
-   "--bind", ":8080" \
-   ]
+  "hypercorn", \
+  "--worker-class", "uvloop", \
+  "--workers", "2", \
+  "--bind", ":8080", \
+  "src.main:app" \
+  ]
