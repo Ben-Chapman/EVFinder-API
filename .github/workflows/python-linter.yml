@@ -1,0 +1,28 @@
+name: flake8 Lint
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/**.py'
+  pull_request:
+    paths:
+      - 'src/**.py'
+
+jobs:
+  flake8-lint:
+    runs-on: ubuntu-latest
+    name: Lint with Flake8 and Black
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v3
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: flake8 Lint
+        uses: TrueBrain/actions-flake8@v2
+        with:
+          path: "api"
+          extra_arguments: "--config=src/.flake8"
+          plugins: "flake8-bugbear flake8-black"
+     
