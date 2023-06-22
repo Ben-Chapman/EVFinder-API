@@ -19,9 +19,7 @@ async def main(
     """
 
     zip_code = common_params.zip
-    # The Ford API doesn't like a URL-encoded + (%2B) but will accept a URL-encoded
-    # space (%20). So replacing the + with a <space>
-    model = common_params.model.replace("+", " ")
+    model = common_params.model
     radius = common_params.radius
 
     # Usually a request to the Ford API is made with the requesting
@@ -166,9 +164,7 @@ async def get_ford_vin_detail(req: Request) -> dict:
 
     vin_params = {
         "dealerSlug": dealer_slug,
-        # The Ford API doesn't like a URL-encoded + (%2B) but will accept a URL-encoded
-        # space (%20). So replacing the + with a <space>
-        "modelSlug": model_slug.replace("+", " "),
+        "modelSlug": model_slug,
         "vin": vin,
         "make": "Ford",
         "market": "US",
