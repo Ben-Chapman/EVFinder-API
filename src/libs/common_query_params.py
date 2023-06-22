@@ -12,15 +12,9 @@ class CommonInventoryQueryParams:
     valid_models = [
         "^Ioniq(%20|\+|\s|\-)5$",  # Hyundai Ioniq 5  # noqa: W605
         "^Ioniq(%20|\+|\s|\-)6$",  # Hyundai Ioniq 6  # noqa: W605
-        "^Ioniq(%20|\+|\s)Phev$",  # Hyundai Ioniq Phev  # noqa: W605
         "^Kona(%20|\+|\s)Ev$",  # Hyundai Kona EV  # noqa: W605
-        "^Santa(%20|\+|\s)Fe(%20|\+|\s)Phev$",  # Hyundai Santa Fe Phev  # noqa: W605
-        "^Tucson(%20|\+|\s)Phev$",  # Hyundai Tucson Phev  # noqa: W605
         "^N$",  # Kia EV6
         "^V$",  # Kia Niro EV
-        "^F$",  # Kia Niro Plug-in Hybrid
-        "^R$",  # Kia Sportage Plug-in Hybrid
-        "^T$",  # Kia Sorento Plug-in Hybrid
         "^GV60$",  # Genesis GV60
         "^ELECTRIFIED-G80$",  # Genesis Electrified G80
         "^ELECTRIFIED-GV70$",  # Genesis Electrified GV70
