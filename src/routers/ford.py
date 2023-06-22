@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Request
 
 from src.libs.common_query_params import CommonInventoryQueryParams
-from src.libs.responses import error_response, send_response
 from src.libs.http import AsyncHTTPClient
+from src.libs.responses import error_response, send_response
 
 router = APIRouter(prefix="/api")
 verify_ssl = True
@@ -19,7 +19,9 @@ async def main(
     """
 
     zip_code = common_params.zip
-    model = common_params.model
+    # The Ford API doesn't like a URL-encoded + (%2B) but will accept a URL-encoded
+    # space (%20). So replacing the + with a <space>
+    model = common_params.model.replace("+", " ")
     radius = common_params.radius
 
     # Usually a request to the Ford API is made with the requesting
@@ -29,15 +31,19 @@ async def main(
         "Referer": f"https://shop.ford.com/inventory/{model}/",
     }
 
+    segment_type = {"mache": "Crossover", "f-150 lightning": "Truck"}
+
     common_params = {
         "make": "Ford",
         "market": "US",
         "inventoryType": "Radius",
         "maxDealerCount": "1",
         "model": model,
-        "segment": "Crossover",
+        "segment": segment_type[model],
         "zipcode": zip_code,
     }
+
+    # common_params = urllib.parse.urlencode(common_params, safe="+")
 
     # Ford apparently does not support radius searches > 500 miles. For now, returning
     # an error message to users who attempt a search radius > 500  miles.
@@ -59,7 +65,6 @@ async def main(
         return error_response(
             error_message=error_message,
             error_data="",
-            status_code=slug.split(":")[1],
         )
 
     if slug:
@@ -135,7 +140,6 @@ async def main(
             # Return the inventory results + the data from the remainder api calls
             inv["rdata"] = {"vehicles": vehicles, "dealers": dealers}
 
-            # return send_response(response_data=inv, cache_control_age=3600)
     except TypeError as e:
         print(f"No pagination for Inventory call: {e}")
 
@@ -144,6 +148,7 @@ async def main(
 
 @router.get("/vin/ford")
 async def get_ford_vin_detail(req: Request) -> dict:
+    model = req.query_params.get("model")
     vin = req.query_params.get("vin")
     zip_code = req.query_params.get("zip")
     year = req.query_params.get("year")
@@ -153,7 +158,7 @@ async def get_ford_vin_detail(req: Request) -> dict:
 
     headers = {
         "Referer": (
-            f"https://shop.ford.com/inventory/mach-e/results?"
+            f"https://shop.ford.com/inventory/{model}/results?"
             f"zipcode={zip_code}&Radius=20&year={year}"
             f"&Order=Distance"
         )
@@ -161,14 +166,15 @@ async def get_ford_vin_detail(req: Request) -> dict:
 
     vin_params = {
         "dealerSlug": dealer_slug,
-        "modelSlug": model_slug,
+        # The Ford API doesn't like a URL-encoded + (%2B) but will accept a URL-encoded
+        # space (%20). So replacing the + with a <space>
+        "modelSlug": model_slug.replace("+", " "),
         "vin": vin,
         "make": "Ford",
         "market": "US",
         "requestTowingData": "undefined",
         "inventoryType": "Radius",
         "ownerPACode": pa_code,
-        "segment": "Crossover",
         "zipcode": zip_code,
     }
 
@@ -211,9 +217,11 @@ async def get_dealer_slug(headers, params):
         dealers = dealers.json()
         if (
             dealers["status"].lower() == "success"
-            and len(dealers["data"]["Response"]) > 0
+            and len(dealers["data"]["firstFDDealerSlug"]) > 0
         ):
             return dealers["data"]["firstFDDealerSlug"]
+        else:
+            return f"ERROR: {dealers['errorType']}"
 
 
 async def get_ford_inventory(headers, params):

@@ -26,6 +26,7 @@ class CommonInventoryQueryParams:
         "^ELECTRIFIED-GV70$",  # Genesis Electrified GV70
         "^ID.4$",  # VW ID.4
         "^mache$",  # Ford Mustang Mach-E
+        r"^f-150(%20|\+|\s|\-)lightning",  # Ford F-150 Lightning
         "^Bolt EV$",  # Chevrolet Bolt EV
         "^Bolt EUV$",  # Chevrolet Bolt EUV
         "^etron$",  # Audi e-tron
@@ -34,7 +35,6 @@ class CommonInventoryQueryParams:
         "^i4$",  # BMW i4
         "^i7$",  # BMW i7
         "^9$",  # BMW ix
-        "^mache$",  # Ford Mustang Mach-E
     ]
 
     def __init__(
