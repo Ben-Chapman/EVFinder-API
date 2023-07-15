@@ -41,16 +41,21 @@ def send_error_to_gcp(error):
 
     from google.cloud import error_reporting
 
-    # Setup error logging to GCP Error Reporting
-    error_client = error_reporting.Client(version=error.additionalData["appVersion"])
+    if type(error) == str:
+        error_reporting.Client().report(message=error)
+    else:
+        # Setup error logging to GCP Error Reporting
+        error_client = error_reporting.Client(
+            version=error.additionalData["appVersion"]
+        )
 
-    # The HTTPContext class is automatically parsed by the GCP Error Reporting service,
-    # so using HTTPContext to supply some EVFinder specific information.
-    http_context = error_reporting.HTTPContext(
-        user_agent=error.additionalData["userAgent"],
-        referrer=error.additionalData["appVersion"],
-    )
-    error_client.report(
-        message=f"{error.errorMessage} {error.additionalData}",
-        http_context=http_context,
-    )
+        # The HTTPContext class is automatically parsed by the GCP Error Reporting service,
+        # so using HTTPContext to supply some EVFinder specific information.
+        http_context = error_reporting.HTTPContext(
+            user_agent=error.additionalData["userAgent"],
+            referrer=error.additionalData["appVersion"],
+        )
+        error_client.report(
+            message=f"{error.errorMessage} {error.additionalData}",
+            http_context=http_context,
+        )
