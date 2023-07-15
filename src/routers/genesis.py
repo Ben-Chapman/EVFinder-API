@@ -30,7 +30,7 @@ async def get_genesis_inventory(
     }
 
     async with AsyncHTTPClient(
-        base_url=genesis_base_url, timeout_value=30, verify=verify_ssl
+        base_url=genesis_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         inv = await http.get(
             uri=("/bin/api/v1/inventory"),
@@ -64,7 +64,7 @@ async def get_genesis_vin_detail(req: Request) -> dict:
     }
 
     async with AsyncHTTPClient(
-        base_url=genesis_base_url, timeout_value=30, verify=verify_ssl
+        base_url=genesis_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         v = await http.get(
             uri=("/bin/api/v1/vehicledetails.json"),

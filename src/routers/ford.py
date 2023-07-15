@@ -176,7 +176,7 @@ async def get_ford_vin_detail(req: Request) -> dict:
 
     async with AsyncHTTPClient(
         base_url=ford_base_url,
-        timeout_value=30,
+        timeout_value=30.0,
         verify=verify_ssl,
     ) as http:
         v = await http.get(
@@ -198,7 +198,7 @@ async def get_dealer_slug(headers, params):
     """
     async with AsyncHTTPClient(
         base_url=ford_base_url,
-        timeout_value=30,
+        timeout_value=30.0,
         verify=verify_ssl,
     ) as http:
         dealers = await http.get(
@@ -223,7 +223,7 @@ async def get_dealer_slug(headers, params):
 async def get_ford_inventory(headers, params):
     """Main Ford API function which obtains inventory data for a given vehicle."""
     async with AsyncHTTPClient(
-        base_url=ford_base_url, timeout_value=30, verify=verify_ssl
+        base_url=ford_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         inventory = await http.get(
             uri="/aemservices/cache/inventory/dealer-lot",
