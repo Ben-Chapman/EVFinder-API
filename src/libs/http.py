@@ -16,10 +16,11 @@ class AsyncHTTPClient:
         self.timeout_value = timeout_value
         self.verify = verify
 
+        timeouts = httpx.Timeout(10.0, read=self.timeout_value)
         self.client = httpx.AsyncClient(
             http2=use_http2,
             base_url=base_url,
-            timeout=timeout_value,
+            timeout=timeouts,
             verify=verify,
         )
 
@@ -34,34 +35,42 @@ class AsyncHTTPClient:
         try:
             resp = await self.client.get(uri, headers=headers, params=params)
             resp.raise_for_status()
-            return resp
+
         except httpx.TimeoutException as e:
-            print(f"The request to {e.request.url!r} timed out: {e}.")
-            send_error_to_gcp(f"The request to {e.request.url!r} timed out.\n{e}.")
+            error_message = f"The request to {e.request.url!r} timed out. {e}."
+            send_error_to_gcp(error_message)
+            return error_message
 
         except httpx.NetworkError as e:
-            print(f"Network error to {e.request.url!r}: {e}.")
-            send_error_to_gcp(f"A network error occurred for {e.request.url!r}.\n{e}.")
+            error_message = f"A network error occurred for {e.request.url!r}. {e}."
+            send_error_to_gcp(error_message)
+            return error_message
 
         except httpx.DecodingError as e:
-            print(f"Decoding error {e.request.url!r}: {e}.")
-            send_error_to_gcp(
-                f"""Decoding of the response to {e.request.url!r} failed,
-                due to a malformed encoding.\n{e}."""
-            )
+            error_message = f"""Decoding of the response to {e.request.url!r} failed,
+                due to a malformed encoding. {e}."""
+            send_error_to_gcp(error_message)
+            return error_message
 
         except httpx.TooManyRedirects as e:
-            print(f"Redirects error {e.request.url!r}: {e}.")
-            send_error_to_gcp(f"Too many redirects for {e.request.url!r} failed.\n{e}.")
+            error_message = f"Too many redirects for {e.request.url!r} failed. {e}."
+            send_error_to_gcp(error_message)
+            return error_message
 
+        # Base exceptions to catch all remaining errors
         except httpx.HTTPStatusError as e:
-            print(f"\n\n\nHTTP helper error here.\n\n\n{e}")
-            send_error_to_gcp(
-                f"Error response {e.response.status_code} while requesting {e.request.url!r}."
-            )
+            error_message = f"""Error response {e.response.status_code} while requesting
+            {e.request.url!r}."""
+            send_error_to_gcp(error_message)
+            return error_message
 
         except httpx.RequestError as e:
-            send_error_to_gcp(f"An error occurred while requesting {e.request.url!r}.")
+            error_message = f"An error occurred while requesting {e.request.url!r}. {e}"
+            send_error_to_gcp(error_message)
+            return error_message
+
+        else:
+            return resp
 
     @async_timeit
     async def post(self, uri: str, headers: dict, post_data: dict):
