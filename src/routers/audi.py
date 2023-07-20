@@ -46,7 +46,7 @@ async def get_audi_inventory(
     }
 
     async with AsyncHTTPClient(
-        base_url=audi_base_url, timeout_value=30, verify=verify_ssl
+        base_url=audi_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         g = await http.post(uri="/", headers=headers, post_data=inventory_post_data)
 
@@ -92,7 +92,7 @@ async def get_audi_vin_detail(req: Request) -> dict:
 
     async with AsyncHTTPClient(
         base_url=audi_base_url,
-        timeout_value=30,
+        timeout_value=30.0,
         verify=verify_ssl,
     ) as http:
         v = await http.post(uri="/", headers=headers, post_data=vin_post_data)

@@ -25,7 +25,7 @@ async def get_manufacturer_inventory(
     }
 
     async with AsyncHTTPClient(
-        base_url=manufacturer_base_url, timeout_value=30, verify=verify_ssl
+        base_url=manufacturer_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         g = await http.get(
             uri="",
@@ -62,7 +62,7 @@ async def get_manufacturer_vin_detail(req: Request) -> dict:
 
     async with AsyncHTTPClient(
         base_url=manufacturer_base_url,
-        timeout_value=30,
+        timeout_value=30.0,
         verify=verify_ssl,
     ) as http:
         v = await http.get(uri="", headers=headers, params="")

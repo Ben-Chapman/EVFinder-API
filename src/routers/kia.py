@@ -36,7 +36,7 @@ async def get_kia_inventory(
     }
 
     async with AsyncHTTPClient(
-        base_url="https://www.kia.com", timeout_value=30
+        base_url="https://www.kia.com", timeout_value=30.0
     ) as http:
         inv = await http.post(
             uri="/us/services/en/inventory/initial",

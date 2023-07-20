@@ -35,7 +35,7 @@ async def get_volkswagen_inventory(
     }
 
     async with AsyncHTTPClient(
-        base_url=vw_base_url, timeout_value=30, verify=verify_ssl
+        base_url=vw_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         inv = await http.post(uri="/", headers=headers, post_data=inventory_post_data)
 
@@ -73,7 +73,7 @@ async def get_hyundai_vin_detail(req: Request) -> dict:
     )
 
     async with AsyncHTTPClient(
-        base_url=vw_base_url, timeout_value=30, verify=verify_ssl
+        base_url=vw_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         vin = await http.post(uri="/", headers=headers, post_data=vin_post_data)
         data = vin.json()

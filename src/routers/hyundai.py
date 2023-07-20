@@ -26,7 +26,7 @@ async def get_hyundai_inventory(
 
     # Make a call to the Hyundai API
     async with AsyncHTTPClient(
-        base_url=hyundai_base_url, timeout_value=30, verify=verify_ssl
+        base_url=hyundai_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         g = await http.get(
             uri="/var/hyundai/services/inventory/vehicleList.json",
@@ -65,7 +65,7 @@ async def get_hyundai_inventory(
 async def get_hyundai_vin_detail(req: Request) -> dict:
     # Make a call to the Hyundai API
     async with AsyncHTTPClient(
-        base_url=hyundai_base_url, timeout_value=30, verify=verify_ssl
+        base_url=hyundai_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         params = {
             "model": req.query_params.get("model"),
