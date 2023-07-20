@@ -6,7 +6,8 @@ from pydantic import BaseModel
 
 class ErrorMessage(BaseModel):
     errorMessage: str
-    additionalData: dict | None = None
+    userAgent: str
+    appVersion: str
 
 
 router = APIRouter(prefix="/api")
@@ -29,9 +30,8 @@ async def accept_application_error(
 
     Keyword arguments:
     errorMessage -- the error message to be logged
-
-
     """
+
     background_tasks.add_task(send_error_to_gcp, error)
     return {"status": "OK"}
 
@@ -52,15 +52,15 @@ def send_error_to_gcp(error, http_context=None):
         error_client.report(message=error, http_context=context)
     else:
         # Setup error logging to GCP Error Reporting
-        error_client = error_reporting.Client(version=error["appVersion"])
+        error_client = error_reporting.Client(version=error.appVersion)
 
         # The HTTPContext class is automatically parsed by the GCP Error Reporting service,
         # so using HTTPContext to supply some EVFinder specific information.
         http_context = error_reporting.HTTPContext(
-            user_agent=error.additionalData["userAgent"],
-            referrer=error["appVersion"],
+            user_agent=error.userAgent,
+            referrer=error.appVersion,
         )
         error_client.report(
-            message=f"{error.errorMessage} {error.additionalData}",
+            message=f"{error.errorMessage}",
             http_context=http_context,
         )

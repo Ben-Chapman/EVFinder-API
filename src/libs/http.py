@@ -44,7 +44,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "504",
+                    "status_code": "504",
                 },
             )
             return error_message
@@ -57,7 +57,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "503",
+                    "status_code": "503",
                 },
             )
             return error_message
@@ -71,7 +71,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "400",
+                    "status_code": "400",
                 },
             )
             return error_message
@@ -84,7 +84,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "429",
+                    "status_code": "429",
                 },
             )
             return error_message
@@ -112,7 +112,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "500",
+                    "status_code": "500",
                 },
             )
             return error_message
@@ -147,7 +147,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "504",
+                    "status_code": "504",
                 },
             )
             return error_message
@@ -160,7 +160,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "503",
+                    "status_code": "503",
                 },
             )
             return error_message
@@ -174,7 +174,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "400",
+                    "status_code": "400",
                 },
             )
             return error_message
@@ -187,7 +187,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "429",
+                    "status_code": "429",
                 },
             )
             return error_message
@@ -202,7 +202,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "500",
+                    "status_code": "500",
                 },
             )
             return error_message
@@ -215,7 +215,7 @@ class AsyncHTTPClient:
                     "method": e.request.method,
                     "url": str(e.request.url),
                     "user_agent": headers["User-Agent"],
-                    "response_status_code": "400",
+                    "status_code": "400",
                 },
             )
             return error_message
