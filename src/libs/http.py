@@ -32,7 +32,6 @@ class AsyncHTTPClient:
 
     @async_timeit
     async def get(self, uri: str, headers: dict, params: dict | None = None):
-        print(headers)
         try:
             resp = await self.client.get(uri, headers=headers, params=params)
             resp.raise_for_status()
