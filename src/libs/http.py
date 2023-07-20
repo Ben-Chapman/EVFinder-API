@@ -38,35 +38,96 @@ class AsyncHTTPClient:
 
         except httpx.TimeoutException as e:
             error_message = f"The request to {e.request.url!r} timed out. {e}."
-            send_error_to_gcp(error_message)
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "504",
+                },
+            )
             return error_message
 
         except httpx.NetworkError as e:
             error_message = f"A network error occurred for {e.request.url!r}. {e}."
-            send_error_to_gcp(error_message)
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "503",
+                },
+            )
             return error_message
 
         except httpx.DecodingError as e:
             error_message = f"""Decoding of the response to {e.request.url!r} failed,
                 due to a malformed encoding. {e}."""
-            send_error_to_gcp(error_message)
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "400",
+                },
+            )
             return error_message
 
         except httpx.TooManyRedirects as e:
             error_message = f"Too many redirects for {e.request.url!r} failed. {e}."
-            send_error_to_gcp(error_message)
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "429",
+                },
+            )
+            return error_message
+
+        except httpx.RemoteProtocolError as e:
+            error_message = f"An error occurred while requesting {e.request.url!r}. {e}"
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "status_code": "400",
+                },
+            )
             return error_message
 
         # Base exceptions to catch all remaining errors
         except httpx.HTTPStatusError as e:
             error_message = f"""Error response {e.response.status_code} while requesting
             {e.request.url!r}."""
-            send_error_to_gcp(error_message)
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "500",
+                },
+            )
             return error_message
 
         except httpx.RequestError as e:
             error_message = f"An error occurred while requesting {e.request.url!r}. {e}"
-            send_error_to_gcp(error_message)
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "status_code": "400",
+                },
+            )
             return error_message
 
         else:
@@ -75,6 +136,89 @@ class AsyncHTTPClient:
     @async_timeit
     async def post(self, uri: str, headers: dict, post_data: dict):
         try:
-            return await self.client.post(uri, headers=headers, json=post_data)
-        except Exception as e:
-            return e
+            resp = await self.client.post(uri, headers=headers, json=post_data)
+            resp.raise_for_status()
+
+        except httpx.TimeoutException as e:
+            error_message = f"The request to {e.request.url!r} timed out. {e}."
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "504",
+                },
+            )
+            return error_message
+
+        except httpx.NetworkError as e:
+            error_message = f"A network error occurred for {e.request.url!r}. {e}."
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "503",
+                },
+            )
+            return error_message
+
+        except httpx.DecodingError as e:
+            error_message = f"""Decoding of the response to {e.request.url!r} failed,
+                due to a malformed encoding. {e}."""
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "400",
+                },
+            )
+            return error_message
+
+        except httpx.TooManyRedirects as e:
+            error_message = f"Too many redirects for {e.request.url!r} failed. {e}."
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "429",
+                },
+            )
+            return error_message
+
+        # Base exceptions to catch all remaining errors
+        except httpx.HTTPStatusError as e:
+            error_message = f"""Error response {e.response.status_code} while requesting
+            {e.request.url!r}."""
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "500",
+                },
+            )
+            return error_message
+
+        except httpx.RequestError as e:
+            error_message = f"An error occurred while requesting {e.request.url!r}. {e}"
+            send_error_to_gcp(
+                error_message,
+                http_context={
+                    "method": e.request.method,
+                    "url": str(e.request.url),
+                    "user_agent": headers["User-Agent"],
+                    "response_status_code": "400",
+                },
+            )
+            return error_message
+
+        else:
+            return resp
