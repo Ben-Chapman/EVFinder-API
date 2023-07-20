@@ -36,24 +36,29 @@ async def accept_application_error(
     return {"status": "OK"}
 
 
-def send_error_to_gcp(error):
+def send_error_to_gcp(error, http_context=None):
     """A FastAPI Background task which sends the error to GCP Error Reporting"""
 
     from google.cloud import error_reporting
 
     if type(error) == str:
-        error_reporting.Client().report(message=error)
+        error_client = error_reporting.Client()
+        context = error_reporting.HTTPContext(
+            method=http_context["method"],
+            url=http_context["url"],
+            user_agent=http_context["user_agent"],
+            response_status_code=http_context["status_code"],
+        )
+        error_client.report(message=error, http_context=context)
     else:
         # Setup error logging to GCP Error Reporting
-        error_client = error_reporting.Client(
-            version=error.additionalData["appVersion"]
-        )
+        error_client = error_reporting.Client(version=error["appVersion"])
 
         # The HTTPContext class is automatically parsed by the GCP Error Reporting service,
         # so using HTTPContext to supply some EVFinder specific information.
         http_context = error_reporting.HTTPContext(
             user_agent=error.additionalData["userAgent"],
-            referrer=error.additionalData["appVersion"],
+            referrer=error["appVersion"],
         )
         error_client.report(
             message=f"{error.errorMessage} {error.additionalData}",
