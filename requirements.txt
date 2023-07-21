@@ -1,5 +1,4 @@
-fastapi==0.96.0
-google-cloud-error-reporting==1.9.1
-hypercorn[uvloop]==0.14.3
+fastapi==0.100.0
+google-cloud-error-reporting==1.9.2
+hypercorn[uvloop]==0.14.4
 httpx[http2]==0.24.1
-tenacity==8.2.2

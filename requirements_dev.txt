@@ -2,9 +2,9 @@
 -r requirements.txt
 
 # Tests and linting
-Faker==18.9.0
+Faker==19.2.0
 flake8==6.0.0
-flake8-bugbear==23.5.9
-pre-commit==3.3.2
-pytest==7.3.1
-vcrpy==4.2.1
+flake8-bugbear==23.7.10
+pre-commit==3.3.3
+pytest==7.4.0
+vcrpy==5.0.0
