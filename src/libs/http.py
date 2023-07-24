@@ -1,3 +1,4 @@
+import asyncio
 import httpx
 
 from src.libs.libs import async_timeit
@@ -30,8 +31,51 @@ class AsyncHTTPClient:
     async def __aexit__(self, exception_type, exception_value, traceback):
         await self.client.aclose()
 
+    async def get(
+        self, uri: str | list, headers: dict | None = None, params: dict | None = None
+    ):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:  # 'RuntimeError: There is no current event loop...'
+            loop = None
+
+        if loop and loop.is_running():
+            print(
+                "Async event loop already running. Adding coroutine to the event loop."
+            )
+
+            result = loop.create_task(
+                self.gather_urls_for_asyncio(uri, headers, params)
+            )
+        else:
+            print("Starting new event loop")
+            result = asyncio.run(self.gather_urls_for_asyncio(uri, headers, params))
+
+        foo = await result
+        print(f"\n\n\nLoop result: {foo[0].json()}\n\n\n")
+        return foo[0]
+
+    async def gather_urls_for_asyncio(
+        self, uri: str | list, headers: dict | None = None, params: dict | None = None
+    ):
+        tasks = []
+
+        if type(uri) == str:
+            if headers or params:
+                tasks.append(
+                    self.fetch_api_data(uri=uri, headers=headers, params=params)
+                )
+                # print(f"\n\n\nTasks: {tasks}\n\n\n")
+        else:
+            for url in uri:
+                tasks.append(
+                    self.fetch_api_data(uri=url[0], headers=url[1], params=url[2])
+                )
+
+        return await asyncio.gather(*tasks)
+
     @async_timeit
-    async def get(self, uri: str, headers: dict, params: dict | None = None):
+    async def fetch_api_data(self, uri: str, headers: dict, params: dict | None = None):
         try:
             resp = await self.client.get(uri, headers=headers, params=params)
             resp.raise_for_status()
@@ -131,6 +175,7 @@ class AsyncHTTPClient:
             return error_message
 
         else:
+            print(f"Resp here: {resp.json()}")
             return resp
 
     @async_timeit
