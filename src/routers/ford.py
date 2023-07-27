@@ -17,7 +17,9 @@ async def main(
     As such, there's lots of additional logic to deal with the various peculiarities
     of this API.
     """
+    import time
 
+    start = time.time()
     zip_code = common_params.zip
     model = common_params.model
     radius = common_params.radius
@@ -40,8 +42,6 @@ async def main(
         "segment": segment_type[model],
         "zipcode": zip_code,
     }
-
-    # common_params = urllib.parse.urlencode(common_params, safe="+")
 
     # Ford apparently does not support radius searches > 500 miles. For now, returning
     # an error message to users who attempt a search radius > 500  miles.
@@ -78,6 +78,7 @@ async def main(
     # Add the dealer_slug to the response, the frontend will need this for future
     # API calls
     inv["dealerSlug"] = slug
+
     try:
         inv["data"]["filterResults"]
     except TypeError:
@@ -117,6 +118,11 @@ async def main(
                     "beginIndex": begin_index,
                     "endIndex": end_index,
                 }
+                print(
+                    f"Ford API request here from {remainder_inventory_params['beginIndex']}"
+                    "to {remainder_inventory_params['endIndex']}"
+                )
+
                 remainder = await get_ford_inventory(
                     headers=headers, params=remainder_inventory_params
                 )
@@ -140,7 +146,8 @@ async def main(
 
     except TypeError as e:
         print(f"No pagination for Inventory call: {e}")
-
+    end = time.time()
+    print(f"\n\n-----\nTime taken: {end-start} sec")
     return send_response(response_data=inv, cache_control_age=3600)
 
 
@@ -192,9 +199,17 @@ async def get_ford_vin_detail(req: Request) -> dict:
 ###
 # Helper functions
 ###
-async def get_dealer_slug(headers, params):
-    """Helper function which obtains a dealer slug from the Ford API. This dealer slug
+async def get_dealer_slug(headers: dict, params: dict | None = None) -> str:
+    """Helper function which retrieves a dealer slug from the Ford API. This dealer slug
     is needed for all future inventory/VIN API requests
+
+    Args:
+        headers (dict): HTTP headers to include with this request.
+        params (dict | None, optional): HTTP query parameters to include with this request.
+        Defaults to None.
+
+    Returns:
+        str: A string containing a Ford dealer slug.
     """
     async with AsyncHTTPClient(
         base_url=ford_base_url,
@@ -207,20 +222,27 @@ async def get_dealer_slug(headers, params):
             params=params,
         )
 
-    if dealers.status_code >= 400:
-        return f"ERROR: {dealers.status_code}"
-    else:
-        dealers = dealers.json()
-        if (
-            dealers["status"].lower() == "success"
-            and len(dealers["data"]["firstFDDealerSlug"]) > 0
-        ):
-            return dealers["data"]["firstFDDealerSlug"]
+        try:
+            dealers.json()
+        except ValueError:
+            error_response(
+                "An error occurred with the Ford API. Please try again later."
+            )
         else:
-            return f"ERROR: {dealers['errorType']}"
+            if dealers.status_code >= 400:
+                return f"ERROR: {dealers.status_code}"
+            else:
+                dealers = dealers.json()
+                if (
+                    dealers["status"].lower() == "success"
+                    and len(dealers["data"]["firstFDDealerSlug"]) > 0
+                ):
+                    return dealers["data"]["firstFDDealerSlug"]
+                else:
+                    return f"ERROR: {dealers['errorType']}"
 
 
-async def get_ford_inventory(headers, params):
+async def get_ford_inventory(headers: dict, params: dict | None = None):
     """Main Ford API function which obtains inventory data for a given vehicle."""
     async with AsyncHTTPClient(
         base_url=ford_base_url, timeout_value=30.0, verify=verify_ssl
