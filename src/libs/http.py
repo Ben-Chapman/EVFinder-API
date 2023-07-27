@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import httpx
 from src.libs.libs import async_timeit
@@ -38,15 +39,21 @@ class AsyncHTTPClient:
             verify=verify,
         )
 
+        self.start_time = time.perf_counter()
+
     async def __aenter__(self):
         return self
 
     async def __aexit__(self, exception_type, exception_value, traceback):
+        end_time = time.perf_counter()
+        print(
+            f"Transaction for {self.base_url} took {end_time - self.start_time} seconds."
+        )
         await self.client.aclose()
 
     async def get(
         self, uri: str | list, headers: dict | None = None, params: dict | None = None
-    ):
+    ) -> list | httpx.Response:
         """Wrap the asyncio coroutine into a Task and schedule its execution.
 
         Args:
@@ -60,7 +67,9 @@ class AsyncHTTPClient:
             Defaults to None.
 
         Returns:
-            list: The Task object. An aggregate list of returned values from the HTTPX request.
+            (list | httpx.Response): The result of an asyncio Task object.
+            If multiple URLs were fetched, returns a list of httpx.Responses. If a single
+            URL was fetched returns a single httpx.Response.
         """
 
         # Make sure we have a running event loop
@@ -79,7 +88,13 @@ class AsyncHTTPClient:
 
         results = await result
 
-        return results
+        # If the length of the results list is 1, this is likely the results of a single
+        # HTTP request. So returning just that one result, not a list containing one item.
+        # If the length is > 1, return the list containing the httpx.Responses.
+        if len(results) == 1:
+            return results[0]
+        else:
+            return results
 
     async def gather_urls_for_asyncio(
         self, uri: str | list, headers: dict | None = None, params: dict | None = None
@@ -116,7 +131,6 @@ class AsyncHTTPClient:
 
         return await asyncio.gather(*tasks)
 
-    @async_timeit
     async def fetch_api_data(self, uri: str, headers: dict, params: dict | None = None):
         """Helper function to issue API requests through HTTPX
 
