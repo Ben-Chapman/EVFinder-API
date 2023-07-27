@@ -1,0 +1,118 @@
+# Build Configuration to be used when a PR is opened or updated.
+steps:
+  # Build the EV Finder API container image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:${TAG_NAME}",
+        ".",
+      ]
+
+  # Push to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:${TAG_NAME}",
+      ]
+    id: "docker push"
+
+    # Build and Deploy the API to Cloud Run
+  - name: google/cloud-sdk
+    args:
+      [
+        "gcloud",
+        "run",
+        "deploy",
+        "api",
+        "--image",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:${TAG_NAME}",
+        "--set-env-vars",
+        "VERSION=${TAG_NAME}",
+        "--region",
+        "us-central1",
+        "--platform",
+        "managed",
+        "--execution-environment",
+        "gen1",
+        "--cpu-boost",
+        "--memory",
+        "512Mi",
+        "--use-http2",
+        "--allow-unauthenticated",
+        "--tag",
+        "canary",
+      ]
+    id: "deploy main api"
+    waitFor:
+      - "docker push"
+
+  # Build and deploy the Ford API
+  - name: google/cloud-sdk
+    args:
+      [
+        "gcloud",
+        "run",
+        "deploy",
+        "ford-api",
+        "--image",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:${TAG_NAME}",
+        "--set-env-vars",
+        "VERSION=${TAG_NAME}",
+        "--region",
+        "us-central1",
+        "--platform",
+        "managed",
+        "--execution-environment",
+        "gen1",
+        "--cpu-boost",
+        "--memory",
+        "512Mi",
+        "--use-http2",
+        "--allow-unauthenticated",
+        "--tag",
+        "canary",
+      ]
+    id: "deploy ford api"
+    waitFor:
+      - "docker push"
+
+  # Swing traffic over to the newly deploy API
+  - name: google/cloud-sdk
+    args:
+      [
+        "gcloud",
+        "run",
+        "services",
+        "update-traffic",
+        "api",
+        "--to-tags=canary=50",
+        "--region",
+        "us-central1",
+      ]
+    waitFor:
+      - "deploy main api"
+
+  # Swing traffic over to the newly deploy Ford API
+  - name: google/cloud-sdk
+    args:
+      [
+        "gcloud",
+        "run",
+        "services",
+        "update-traffic",
+        "ford-api",
+        "--to-tags=canary=50",
+        "--region",
+        "us-central1",
+      ]
+    waitFor:
+      - "deploy ford api"
+
+images:
+  - "us-central1-docker.pkg.dev/evfinder/evfinder-api/evfinder-api:${TAG_NAME}"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
