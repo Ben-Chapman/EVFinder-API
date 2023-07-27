@@ -88,7 +88,8 @@ steps:
         "services",
         "update-traffic",
         "api",
-        "--to-tags=canary=50",
+        "--to-tags",
+        "canary=50",
         "--region",
         "us-central1",
       ]
@@ -104,7 +105,8 @@ steps:
         "services",
         "update-traffic",
         "ford-api",
-        "--to-tags=canary=50",
+        "--to-tags",
+        "canary=50",
         "--region",
         "us-central1",
       ]
