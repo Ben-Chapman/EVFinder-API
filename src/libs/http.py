@@ -1,6 +1,6 @@
 import asyncio
-import httpx
 
+import httpx
 from src.libs.libs import async_timeit
 from src.routers.logger import send_error_to_gcp
 
@@ -9,10 +9,23 @@ class AsyncHTTPClient:
     def __init__(
         self,
         base_url: str,
-        timeout_value: int,
+        timeout_value: float,
         use_http2: bool = True,
         verify: bool = True,
     ):
+        """A helper HTTP library to be used for HTTP requests to fetch manufacturer
+        inventory. This library is designed to be used as a context manager and is async
+        compatible.
+
+        Args:
+            base_url (str): A URL to use as the base when building request URLs.
+            timeout_value (float): How long to wait for an HTTP response. Accepts float
+            values like 5.0 or 30.5.
+            use_http2 (bool, optional): Use HTTP/2 for requests? If HTTP/2 is not supported
+            by the destination host, falls back to HTTP/1.1. Defaults to True.
+            verify (bool, optional): Verify SSL certificates? If True and a certificate
+            can not be verified, will fail. Defaults to True.
+        """
         self.base_url = base_url
         self.timeout_value = timeout_value
         self.verify = verify
@@ -34,30 +47,59 @@ class AsyncHTTPClient:
     async def get(
         self, uri: str | list, headers: dict | None = None, params: dict | None = None
     ):
+        """Wrap the asyncio coroutine into a Task and schedule its execution.
+
+        Args:
+            uri (str | list): A single HTTP URI, or list of HTTP URIs to fetch. If uri
+            is a list, it must be in the format of: [uri, headers, params].
+
+            headers (dict | None, optional): HTTP headers to include with this request.
+            Defaults to None.
+
+            params (dict | None, optional): HTTP query parameters to include with this request.
+            Defaults to None.
+
+        Returns:
+            list: The Task object. An aggregate list of returned values from the HTTPX request.
+        """
+
+        # Make sure we have a running event loop
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:  # 'RuntimeError: There is no current event loop...'
             loop = None
 
         if loop and loop.is_running():
-            print(
-                "Async event loop already running. Adding coroutine to the event loop."
-            )
-
             result = loop.create_task(
                 self.gather_urls_for_asyncio(uri, headers, params)
             )
         else:
-            print("Starting new event loop")
+            # If for some reason we don't have a running event loop, start one
             result = asyncio.run(self.gather_urls_for_asyncio(uri, headers, params))
 
-        foo = await result
-        print(f"\n\n\nLoop result: {foo[0].json()}\n\n\n")
-        return foo[0]
+        results = await result
+
+        return results
 
     async def gather_urls_for_asyncio(
         self, uri: str | list, headers: dict | None = None, params: dict | None = None
     ):
+        """Create a list of tasks required for asyncio to run. These tasks are httpx
+        request futures.
+
+        Args:
+            uri (str | list): A single HTTP URI, or list of HTTP URIs to fetch. If uri
+            is a list, it must be in the format of: [uri, headers, params].
+
+            headers (dict | None, optional): HTTP headers to include with this request.
+            Defaults to None.
+
+            params (dict | None, optional): HTTP query parameters to include with this request.
+            Defaults to None.
+
+        Returns:
+            list: An aggregate list of returned values from the HTTPX request.
+        """
         tasks = []
 
         if type(uri) == str:
@@ -65,7 +107,7 @@ class AsyncHTTPClient:
                 tasks.append(
                     self.fetch_api_data(uri=uri, headers=headers, params=params)
                 )
-                # print(f"\n\n\nTasks: {tasks}\n\n\n")
+                print(f"Requested url: {[uri, headers, params]}")
         else:
             for url in uri:
                 tasks.append(
@@ -76,6 +118,17 @@ class AsyncHTTPClient:
 
     @async_timeit
     async def fetch_api_data(self, uri: str, headers: dict, params: dict | None = None):
+        """Helper function to issue API requests through HTTPX
+
+        Args:
+            uri (str): A HTTP URI to fetch
+            headers (dict): HTTP headers to include with this request.
+            params (dict | None, optional): HTTP query parameters to include with this request.
+            Defaults to None.
+
+        Returns:
+            ResponseObject: The HTTP response from the requested URL.
+        """
         try:
             resp = await self.client.get(uri, headers=headers, params=params)
             resp.raise_for_status()
@@ -175,7 +228,6 @@ class AsyncHTTPClient:
             return error_message
 
         else:
-            print(f"Resp here: {resp.json()}")
             return resp
 
     @async_timeit
