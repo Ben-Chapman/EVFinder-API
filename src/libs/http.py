@@ -51,6 +51,9 @@ class AsyncHTTPClient:
         )
         await self.client.aclose()
 
+    async def close(self):
+        await self.client.aclose()
+
     async def get(
         self, uri: str | list, headers: dict | None = None, params: dict | None = None
     ) -> list | httpx.Response:
@@ -122,7 +125,6 @@ class AsyncHTTPClient:
                 tasks.append(
                     self.fetch_api_data(uri=uri, headers=headers, params=params)
                 )
-                print(f"Requested url: {[uri, headers, params]}")
         else:
             for url in uri:
                 tasks.append(
