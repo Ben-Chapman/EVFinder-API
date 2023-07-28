@@ -44,6 +44,7 @@ steps:
         "--allow-unauthenticated",
         "--tag",
         "canary",
+        "--no-traffic",
       ]
     id: "deploy main api"
     waitFor:
@@ -74,6 +75,7 @@ steps:
         "--allow-unauthenticated",
         "--tag",
         "canary",
+        "--no-traffic",
       ]
     id: "deploy ford api"
     waitFor:
