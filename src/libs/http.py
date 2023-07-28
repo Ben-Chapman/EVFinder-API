@@ -14,8 +14,8 @@ class AsyncHTTPClient:
         use_http2: bool = True,
         verify: bool = True,
     ):
-        """A helper HTTP library to be used for HTTP requests to fetch manufacturer
-        inventory. This library is designed to be used as a context manager and is async
+        """A HTTP helper library to be used to fetch manufacturer inventory. This library
+        is designed to be called directly or used as a context manager and is async
         compatible.
 
         Args:
@@ -32,6 +32,7 @@ class AsyncHTTPClient:
         self.verify = verify
 
         timeouts = httpx.Timeout(10.0, read=self.timeout_value)
+
         self.client = httpx.AsyncClient(
             http2=use_http2,
             base_url=base_url,
@@ -156,7 +157,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "504",
                 },
             )
@@ -169,7 +170,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "503",
                 },
             )
@@ -183,7 +184,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "400",
                 },
             )
@@ -196,7 +197,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "429",
                 },
             )
@@ -209,7 +210,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "400",
                 },
             )
@@ -224,7 +225,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "500",
                 },
             )
@@ -237,7 +238,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "400",
                 },
             )
@@ -259,7 +260,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "504",
                 },
             )
@@ -272,7 +273,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "503",
                 },
             )
@@ -286,7 +287,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "400",
                 },
             )
@@ -299,7 +300,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "429",
                 },
             )
@@ -314,7 +315,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "500",
                 },
             )
@@ -327,7 +328,7 @@ class AsyncHTTPClient:
                 http_context={
                     "method": e.request.method,
                     "url": str(e.request.url),
-                    "user_agent": headers["User-Agent"],
+                    "user_agent": headers.get("User-Agent"),
                     "status_code": "400",
                 },
             )
