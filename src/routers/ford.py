@@ -26,13 +26,14 @@ async def main(
     model = common_params.model
     radius = common_params.radius
 
-    # Setup the HTTPX client, to be used throughout this router
+    # Setup the HTTPX client to be used for the many API calls throughout this router
     http = AsyncHTTPClient(
         base_url=ford_base_url, timeout_value=30.0, verify=verify_ssl
     )
-    # Usually a request to the Ford API is made with the requesting
-    # user agent. The Ford API is behind Akamai, who treats a 'forged' UA as a
-    # bot and will tarpit the request. So just letting this httpx UA be used.
+
+    # Usually a request to the Ford API is made with the requesting user agent. The Ford
+    # API is behind Akamai, who treats a 'forged' UA as a bot and will tarpit the request.
+    # So just letting this httpx UA be used.
     headers = {
         "Referer": f"https://shop.ford.com/inventory/{model}/",
     }
@@ -74,7 +75,7 @@ async def main(
         error_response("An error occurred with the Ford API. Please try again later.")
     else:
         slug = parse_dealer_slug(dealers)
-        print(f"\n\n\n{slug}\n\n\n")
+
         if "ERROR" in slug:
             error_message = (
                 "An error occurred with the Ford API. "
@@ -86,23 +87,21 @@ async def main(
             )
 
     if slug:
-        # Retrieve the initial batch of 12 vehicles
         inventory_params = {
             **common_params,
             "dealerSlug": slug,
             "Radius": radius,
             "Order": "Distance",
         }
-
-    # inv = await get_ford_inventory(headers=headers, params=inventory_params)
+    # Retrieve the initial batch of 12 vehicles
     inv = await http.get(uri=inventory_uri, headers=headers, params=inventory_params)
-    # Add the dealer_slug to the response, the frontend will need this for future
-    # API calls
+
     try:
         inv = inv.json()
     except ValueError:
         error_response("An error occurred with the Ford API. Please try again later.")
 
+    # Add the dealer_slug to the response, the frontend will need this for future API calls
     inv["dealerSlug"] = slug
 
     try:
@@ -114,17 +113,18 @@ async def main(
         )
 
     try:
+        # The total number of vehicles found for the given search parameters
         total_count = inv["data"]["filterResults"]["ExactMatch"]["totalCount"]
-        # The Ford inventory API pages 12 vehicles at a time, and their API does not
-        # accept a random high value for endIndex, nor does it seem to allow for
-        # paging by greater than 100 vehicles at a time. So making N number of API
-        # requests, incremented by step.
     except TypeError as e:
         return error_response(
             error_message=f"An error occurred with the Ford API: {inv['errorMessage']}",
             error_data=e,
         )
     else:
+        # The Ford inventory API pages 12 vehicles at a time, and their API does not
+        # accept a random high value for endIndex, nor does it seem to allow for
+        # paging by greater than 100 vehicles at a time. So making N number of API
+        # requests, incremented by step.
         begin_index = 12
         end_index = 0
         step = 50
@@ -143,6 +143,8 @@ async def main(
             else:
                 end_index = total_count
 
+            # Adding beginIndex and endIndex to the query params used to make subsequent
+            # API requests
             remainder_inventory_params = {
                 **inventory_params,
                 "beginIndex": begin_index,
@@ -158,16 +160,15 @@ async def main(
                 ]
             )
 
-        inventory = await http.get(uri=urls_to_fetch)
-        # async with AsyncHTTPClient(
-        #     base_url=ford_base_url, timeout_value=30.0, verify=verify_ssl
-        # ) as http:
-        #     inventory = await http.get(uri=urls_to_fetch)
+        remainder = await http.get(uri=urls_to_fetch)
 
         # Loop through the inventory results list
-        for api_result in inventory:
+        for api_result in remainder:
             result = api_result.json()
 
+            # A ton of data is returned from the Ford API, most of it unused by the site.
+            # Just storing what's actually used to dramatically reduce the response size
+            # back to the front end.
             vehicles.append(result["data"]["filterResults"]["ExactMatch"]["vehicles"])
             dealers.append(
                 result["data"]["filterSet"]["filterGroupsMap"]["Dealer"][0][
@@ -175,7 +176,7 @@ async def main(
                 ]["filterItems"]
             )
 
-        # Return the inventory results + the data from the remainder api calls
+        # Add the remainder API responses to the inventory dict
         inv["rdata"] = {"vehicles": vehicles, "dealers": dealers}
 
     end = time.perf_counter()
@@ -238,32 +239,11 @@ def parse_dealer_slug(dealers: dict) -> str:
     is needed for all future inventory/VIN API requests
 
     Args:
-        headers (dict): HTTP headers to include with this request.
-        params (dict | None, optional): HTTP query parameters to include with this request.
-        Defaults to None.
+        dealers (dict): A JSON-parsed response from the Ford API containing a dealer slug.
 
     Returns:
         str: A string containing a Ford dealer slug.
     """
-    # async with AsyncHTTPClient(
-    #     base_url=ford_base_url,
-    #     timeout_value=30.0,
-    #     verify=verify_ssl,
-    # ) as http:
-    #     dealers = await http.get(
-    #         uri="/aemservices/cache/inventory/dealer/dealers",
-    #         headers=headers,
-    #         params=params,
-    #     )
-
-    # try:
-    #     dealers.json()
-    # except ValueError:
-    #     error_response(
-    #         "An error occurred with the Ford API. Please try again later."
-    #     )
-    # else:
-
     if (
         dealers["status"].lower() == "success"
         and len(dealers["data"]["firstFDDealerSlug"]) > 0
@@ -271,24 +251,3 @@ def parse_dealer_slug(dealers: dict) -> str:
         return dealers["data"]["firstFDDealerSlug"]
     else:
         return f"ERROR: {dealers['errorType']}"
-
-
-async def get_ford_inventory(
-    request_list: list | None = None,
-    headers: dict | None = None,
-    params: dict | None = None,
-):
-    """Main Ford API function which obtains inventory data for a given vehicle."""
-    async with AsyncHTTPClient(
-        base_url=ford_base_url, timeout_value=30.0, verify=verify_ssl
-    ) as http:
-        if request_list:
-            inventory = await http.get(request_list)
-        else:
-            inventory = await http.get(
-                uri="/aemservices/cache/inventory/dealer-lot",
-                headers=headers,
-                params=params,
-            )
-
-    return inventory.json()
