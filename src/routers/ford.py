@@ -112,15 +112,13 @@ async def main(
             error_data=inv["errorMessage"],
         )
 
-    try:
-        # The total number of vehicles found for the given search parameters
-        total_count = inv["data"]["filterResults"]["ExactMatch"]["totalCount"]
-    except TypeError as e:
-        return error_response(
-            error_message=f"An error occurred with the Ford API: {inv['errorMessage']}",
-            error_data=e,
-        )
+    if len(inv["data"]["filterResults"]) == 0:
+        # If filterResults is empty, no inventory was found. Returning the inv JSON
+        # as is, and the frontend will handle it.
+        return send_response(response_data=inv)
     else:
+        total_count = inv["data"]["filterResults"]["ExactMatch"]["totalCount"]
+
         # The Ford inventory API pages 12 vehicles at a time, and their API does not
         # accept a random high value for endIndex, nor does it seem to allow for
         # paging by greater than 100 vehicles at a time. So making N number of API
