@@ -41,6 +41,9 @@ steps:
         "512Mi",
         "--use-http2",
         "--allow-unauthenticated",
+        "--tag",
+        "latest",
+        "--no-traffic",
       ]
     id: "deploy main api"
     waitFor:
@@ -69,6 +72,9 @@ steps:
         "512Mi",
         "--use-http2",
         "--allow-unauthenticated",
+        "--tag",
+        "latest",
+        "--no-traffic",
       ]
     id: "deploy ford api"
     waitFor:
@@ -83,7 +89,8 @@ steps:
         "services",
         "update-traffic",
         "api",
-        "--to-latest",
+        "--to-tags",
+        "latest=100",
         "--region",
         "us-central1",
       ]
@@ -99,7 +106,8 @@ steps:
         "services",
         "update-traffic",
         "ford-api",
-        "--to-latest",
+        "--to-tags",
+        "latest=100",
         "--region",
         "us-central1",
       ]
