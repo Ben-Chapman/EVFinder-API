@@ -88,13 +88,16 @@ async def get_hyundai_vin_detail(req: Request) -> dict:
             params=params,
         )
 
-        vin_data = v.json()
-
-    if "SUCCESS" in vin_data["status"]:
-        return send_response(response_data=vin_data)
-    else:
-        return error_response(
-            error_message="Received invalid data from the Hyundai API",
-            error_data=vin_data,
-            status_code=400,
-        )
+        try:
+            vin_data = v.json()
+        except AttributeError:
+            return error_response(error_message=v, status_code=504)
+        else:
+            if "SUCCESS" in vin_data["status"]:
+                return send_response(response_data=vin_data)
+            else:
+                return error_response(
+                    error_message="Received invalid data from the Hyundai API",
+                    error_data=vin_data,
+                    status_code=400,
+                )

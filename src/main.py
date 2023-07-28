@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from src.routers import (
     audi,
@@ -45,3 +46,6 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+# Handles Gzip responses for any request that includes "gzip" in the Accept-Encoding header.
+app.add_middleware(GZipMiddleware, minimum_size=1000)

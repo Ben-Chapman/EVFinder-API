@@ -1,3 +1,4 @@
+# Build Configuration to be used when a PR is opened or updated.
 steps:
   # Build the EV Finder API container image
   - name: "gcr.io/cloud-builders/docker"
@@ -42,7 +43,7 @@ steps:
         "--use-http2",
         "--allow-unauthenticated",
         "--tag",
-        "latest",
+        "canary",
         "--no-traffic",
       ]
     id: "deploy main api"
@@ -73,7 +74,7 @@ steps:
         "--use-http2",
         "--allow-unauthenticated",
         "--tag",
-        "latest",
+        "canary",
         "--no-traffic",
       ]
     id: "deploy ford api"
@@ -90,7 +91,7 @@ steps:
         "update-traffic",
         "api",
         "--to-tags",
-        "latest=100",
+        "canary=50",
         "--region",
         "us-central1",
       ]
@@ -107,7 +108,7 @@ steps:
         "update-traffic",
         "ford-api",
         "--to-tags",
-        "latest=100",
+        "canary=50",
         "--region",
         "us-central1",
       ]
