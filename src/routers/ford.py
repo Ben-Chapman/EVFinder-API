@@ -178,7 +178,7 @@ async def main(
         inv["rdata"] = {"vehicles": vehicles, "dealers": dealers}
 
     end = time.perf_counter()
-    print(f"\n\n-----\nTime taken: {end-start} sec")
+    print(f"\n\n-----\nTime taken for Ford API transaction: {end-start} sec")
 
     await http.close()
     return send_response(response_data=inv, cache_control_age=3600)
