@@ -160,6 +160,13 @@ async def main(
 
         remainder = await http.get(uri=urls_to_fetch)
 
+        # If we only have the initial API call and one additional API call, the response
+        # back from the http helper library is a httpx.Response object. If we have multiple
+        # additional API calls, the response back is a list. Catching this situation and
+        # throwing that single httpx.Response object into a list for further processing.
+        if type(remainder) != list:
+            remainder = [remainder]
+
         # Loop through the inventory results list
         for api_result in remainder:
             result = api_result.json()
