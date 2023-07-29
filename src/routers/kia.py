@@ -43,14 +43,21 @@ async def get_kia_inventory(
             headers=headers,
             post_data=post_data,
         )
-        data = inv.json()
+
+        try:
+            data = inv.json()
+        except ValueError:
+            return error_response(
+                error_message="An error occurred obtaining Kia inventory results.",
+                error_data=inv.text,
+            )
 
     try:
         data["inventoryVehicles"]
         return send_response(response_data=data)
     except KeyError:
         return error_response(
-            error_message="Invalid data received from the Kia API",
+            error_message="Invalid data received from the Kia inventory system.",
             error_data=data,
             status_code=500,
         )
