@@ -95,6 +95,8 @@ class AsyncHTTPClient:
         # If the length of the results list is 1, this is likely the results of a single
         # HTTP request. So returning just that one result, not a list containing one item.
         # If the length is > 1, return the list containing the httpx.Responses.
+        # TODO: Return all results as a list. Will need to refactor all manufacturer
+        # routers.
         if len(results) == 1:
             return results[0]
         else:
