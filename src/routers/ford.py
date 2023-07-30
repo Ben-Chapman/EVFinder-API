@@ -26,6 +26,7 @@ async def main(
     model = common_params.model
     radius = common_params.radius
 
+    generic_error_message = "An error occurred obtaining Ford inventory results."
     # Setup the HTTPX client to be used for the many API calls throughout this router
     http = AsyncHTTPClient(
         base_url=ford_base_url, timeout_value=30.0, verify=verify_ssl
@@ -71,16 +72,13 @@ async def main(
     )
     try:
         dealers = dealers.json()
-    except ValueError:
-        error_response("An error occurred with the Ford API. Please try again later.")
+    except AttributeError:
+        error_response(generic_error_message)
     else:
         slug = parse_dealer_slug(dealers)
 
         if "ERROR" in slug:
-            error_message = (
-                "An error occurred with the Ford API. "
-                "Try adjusting your search parameters."
-            )
+            error_message = generic_error_message
             return error_response(
                 error_message=error_message,
                 error_data="",
@@ -95,11 +93,11 @@ async def main(
         }
     # Retrieve the initial batch of 12 vehicles
     inv = await http.get(uri=inventory_uri, headers=headers, params=inventory_params)
-
+    print(f"\n\n\n{type(inv)}\n\n\n")
     try:
         inv = inv.json()
-    except ValueError:
-        error_response("An error occurred with the Ford API. Please try again later.")
+    except AttributeError:
+        error_response(generic_error_message)
 
     # Add the dealer_slug to the response, the frontend will need this for future API calls
     inv["dealerSlug"] = slug
@@ -108,7 +106,7 @@ async def main(
         inv["data"]["filterResults"]
     except TypeError:
         return error_response(
-            error_message=f"An error occurred with the Ford API: {inv['errorMessage']}",
+            error_message=generic_error_message,
             error_data=inv["errorMessage"],
         )
 
@@ -169,17 +167,25 @@ async def main(
 
         # Loop through the inventory results list
         for api_result in remainder:
-            result = api_result.json()
-
-            # A ton of data is returned from the Ford API, most of it unused by the site.
-            # Just storing what's actually used to dramatically reduce the response size
-            # back to the front end.
-            vehicles.append(result["data"]["filterResults"]["ExactMatch"]["vehicles"])
-            dealers.append(
-                result["data"]["filterSet"]["filterGroupsMap"]["Dealer"][0][
-                    "filterItemsMetadata"
-                ]["filterItems"]
-            )
+            # When issuing concurrent API requests, some may come back with non-200
+            # responses (e.g. 500) and thus no JSON response data. Catching that condition
+            # and adding an item to the dict which is returned to the front end.
+            try:
+                result = api_result.json()
+            except AttributeError:
+                inv["apiErrorResponse"] = True
+            else:
+                # A ton of data is returned from the Ford API, most of it unused by the site.
+                # Just storing what's actually used to dramatically reduce the response size
+                # back to the front end.
+                vehicles.append(
+                    result["data"]["filterResults"]["ExactMatch"]["vehicles"]
+                )
+                dealers.append(
+                    result["data"]["filterSet"]["filterGroupsMap"]["Dealer"][0][
+                        "filterItemsMetadata"
+                    ]["filterItems"]
+                )
 
         # Add the remainder API responses to the inventory dict
         inv["rdata"] = {"vehicles": vehicles, "dealers": dealers}
