@@ -162,7 +162,7 @@ async def main(
         # back from the http helper library is a httpx.Response object. If we have multiple
         # additional API calls, the response back is a list. Catching this situation and
         # throwing that single httpx.Response object into a list for further processing.
-        if type(remainder) != list:
+        if type(remainder) is not list:
             remainder = [remainder]
 
         # Loop through the inventory results list

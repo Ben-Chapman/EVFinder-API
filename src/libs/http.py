@@ -123,7 +123,7 @@ class AsyncHTTPClient:
         """
         tasks = []
 
-        if type(uri) == str:
+        if type(uri) is str:
             if headers or params:
                 tasks.append(
                     self.fetch_api_data(uri=uri, headers=headers, params=params)
