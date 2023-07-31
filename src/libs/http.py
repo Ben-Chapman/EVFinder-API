@@ -123,7 +123,7 @@ class AsyncHTTPClient:
         """
         tasks = []
 
-        if type(uri) == str:
+        if type(uri) is str:
             if headers or params:
                 tasks.append(
                     self.fetch_api_data(uri=uri, headers=headers, params=params)
@@ -136,7 +136,9 @@ class AsyncHTTPClient:
 
         return await asyncio.gather(*tasks)
 
-    async def fetch_api_data(self, uri: str, headers: dict, params: dict | None = None):
+    async def fetch_api_data(
+        self, uri: str, headers: dict, params: dict | None = None
+    ) -> dict:
         """Helper function to issue API requests through HTTPX
 
         Args:

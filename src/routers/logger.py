@@ -41,7 +41,7 @@ def send_error_to_gcp(error, http_context=None):
 
     from google.cloud import error_reporting
 
-    if type(error) == str:
+    if type(error) is str:
         error_client = error_reporting.Client()
         context = error_reporting.HTTPContext(
             method=http_context["method"],
