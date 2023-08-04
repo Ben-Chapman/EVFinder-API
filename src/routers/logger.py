@@ -49,7 +49,10 @@ def send_error_to_gcp(error, http_context=None):
             user_agent=http_context["user_agent"],
             response_status_code=http_context["status_code"],
         )
-        error_client.report(message=error, http_context=context)
+        try:
+            error_client.report(message=error, http_context=context)
+        except Exception:
+            pass
     else:
         # Setup error logging to GCP Error Reporting
         error_client = error_reporting.Client(version=error.appVersion)
@@ -60,7 +63,10 @@ def send_error_to_gcp(error, http_context=None):
             user_agent=error.userAgent,
             referrer=error.appVersion,
         )
-        error_client.report(
-            message=f"{error.errorMessage}",
-            http_context=http_context,
-        )
+        try:
+            error_client.report(
+                message=f"{error.errorMessage}",
+                http_context=http_context,
+            )
+        except Exception:
+            pass
