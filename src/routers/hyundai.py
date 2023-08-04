@@ -55,7 +55,7 @@ async def get_hyundai_inventory(
     else:
         return error_response(
             error_message="Received invalid data from the Hyundai API",
-            error_data=inventory,
+            error_data=inventory.text,
             status_code=400,
         )
 
