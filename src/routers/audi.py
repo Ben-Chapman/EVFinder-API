@@ -46,7 +46,7 @@ async def get_audi_inventory(
     }
 
     async with AsyncHTTPClient(
-        base_url=audi_base_url, timeout_value=30.0, verify=verify_ssl
+        base_url=audi_base_url, timeout_value=60.0, verify=verify_ssl
     ) as http:
         g = await http.post(uri="/", headers=headers, post_data=inventory_post_data)
 
@@ -54,7 +54,7 @@ async def get_audi_inventory(
         data = g.json()
     except ValueError:
         return error_response(
-            error_message=f"An error occurred with the Audi API: {g.text}"
+            error_message=f"An error occurred with the Audi inventory service: {g.text}"
         )
     try:
         # If the inventory request was successful, even if 0 vehicles are returned
@@ -66,7 +66,7 @@ async def get_audi_inventory(
         )
     except KeyError:
         print(data)
-        error_message = "An error occurred with the Audi API"
+        error_message = "An error occurred with the Audi inventory service"
         return error_response(error_message=error_message, error_data=data)
 
 
@@ -102,5 +102,5 @@ async def get_audi_vin_detail(req: Request) -> dict:
         data["data"]["getVehicleInfoForWormwood"]
         return send_response(response_data=data, cache_control_age=3600)
     except KeyError:
-        error_message = "An error occurred with the Audi API"
+        error_message = "An error occurred with the Audi inventory service"
         return error_response(error_message=error_message, error_data=data)
