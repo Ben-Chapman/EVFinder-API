@@ -52,12 +52,10 @@ async def get_kia_inventory(
                 error_data=inv.text,
             )
 
+    # When this key is not present, no vehicles were found for the given search so return
+    # an empty dict instead of the Kia response (which is filled with nulls)
     try:
         data["inventoryVehicles"]
         return send_response(response_data=data)
     except KeyError:
-        return error_response(
-            error_message="Invalid data received from the Kia inventory system.",
-            error_data=data,
-            status_code=500,
-        )
+        return send_response(response_data={})
