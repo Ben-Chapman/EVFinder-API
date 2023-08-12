@@ -93,7 +93,6 @@ async def main(
         }
     # Retrieve the initial batch of 12 vehicles
     inv = await http.get(uri=inventory_uri, headers=headers, params=inventory_params)
-    print(f"\n\n\n{type(inv)}\n\n\n")
     try:
         inv = inv.json()
     except AttributeError:

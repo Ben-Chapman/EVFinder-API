@@ -18,6 +18,7 @@ async def get_bmw_inventory(
     max_page_size = 2000
 
     zip_code = str(common_params.zip)
+    year = str(common_params.year)
     model = common_params.model
     radius = str(common_params.radius)
 
@@ -33,6 +34,8 @@ async def get_bmw_inventory(
         + radius
         + " excludeStopSale: false series: "
         + f'"{model}"'
+        + f" minModelYear: {year}"
+        + f" maxModelYear: {year}"
         # Order statuses 0 and 1: Vehicle is at the dealership
         # 2, 3, 4, and 5: Vehicle is in transit or in production"
         + ', statuses:["0","1","2","3","4","5"] }, sorting: [{order: ASC, criteria: DISTANCE_TO_LOCATOR_ZIP},{order:ASC,criteria:PRICE}] pagination: {pageIndex: 1, '  # noqa: B950

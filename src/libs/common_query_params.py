@@ -35,7 +35,7 @@ class CommonInventoryQueryParams:
         self,
         # https://facts.usps.com/42000-zip-codes/. Starting zip code is 00501
         zip: int = Query(ge=501, le=99950),
-        year: int = Query(ge=2022, le=2023),
+        year: int = Query(ge=2022, le=2024),
         radius: int = Query(gt=0, lt=1000),
         model: str = Query(regex="|".join(valid_models)),
     ):
