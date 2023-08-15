@@ -21,8 +21,11 @@ class CommonInventoryQueryParams:
         "^ID.4$",  # VW ID.4
         "^mache$",  # Ford Mustang Mach-E
         r"^f-150(%20|\+|\s|\-)lightning",  # Ford F-150 Lightning
+        "^Blazer EV$",  # Chevrolet Blazer EV
         "^Bolt EV$",  # Chevrolet Bolt EV
         "^Bolt EUV$",  # Chevrolet Bolt EUV
+        "^Equinox EV$",  # Chevrolet Equinox EV
+        "^Silverado EV$",  # Chevrolet Silverado EV
         "^etron$",  # Audi e-tron
         "^etrongt$",  # Audi e-tron GT
         "^q4$",  # Audi Q4 e-tron
