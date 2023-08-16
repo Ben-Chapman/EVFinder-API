@@ -12,7 +12,7 @@ from src.routers import (
     helpers,
     hyundai,
     kia,
-    logger,
+    # logger,
     volkswagen,
 )
 
@@ -28,7 +28,7 @@ app.include_router(kia.router)
 app.include_router(volkswagen.router)
 
 app.include_router(helpers.router)
-app.include_router(logger.router)
+# app.include_router(logger.router)
 
 # CORS support
 origins = [
