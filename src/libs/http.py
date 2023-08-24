@@ -1,3 +1,18 @@
+# Copyright 2023 Ben Chapman
+#
+# This file is part of The EV Finder.
+#
+# The EV Finder is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+#
+# The EV Finder is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with The EV Finder.
+# If not, see <https://www.gnu.org/licenses/>.
+
 import asyncio
 import time
 
@@ -56,12 +71,18 @@ class AsyncHTTPClient:
     async def close(self):
         await self.client.aclose()
 
-    async def get(
-        self, uri: str | list, headers: dict | None = None, params: dict | None = None
+    async def execute_requests(
+        self,
+        http_request_method: str,
+        uri: str | list,
+        headers: dict | None = None,
+        params: dict | None = None,
+        post_data: dict | None = None,
     ) -> list | httpx.Response:
         """Wrap the asyncio coroutine into a Task and schedule its execution.
 
         Args:
+            http_request_method (str): Which HTTP request method to use (get or post)
             uri (str | list): A single HTTP URI, or list of HTTP URIs to fetch. If uri
             is a list, it must be in the format of: [uri, headers, params].
 
@@ -85,15 +106,29 @@ class AsyncHTTPClient:
 
         if loop and loop.is_running():
             result = loop.create_task(
-                self.gather_urls_for_asyncio(uri, headers, params)
+                self.gather_urls_for_asyncio(
+                    http_request_method=http_request_method,
+                    uri=uri,
+                    headers=headers,
+                    params=params,
+                    post_data=post_data,
+                )
             )
         else:
             # If for some reason we don't have a running event loop, start one
-            result = asyncio.run(self.gather_urls_for_asyncio(uri, headers, params))
+            result = asyncio.run(
+                self.gather_urls_for_asyncio(
+                    http_request_method=http_request_method,
+                    uri=uri,
+                    headers=headers,
+                    params=params,
+                    post_data=post_data,
+                )
+            )
 
         results = await result
 
-        # If the length of the results list is 1, this is likely the results of a single
+        # If the length of the results list is 1, this is likely the result of a single
         # HTTP request. So returning just that one result, not a list containing one item.
         # If the length is > 1, return the list containing the httpx.Responses.
         # TODO: Return all results as a list. Will need to refactor all manufacturer
@@ -104,12 +139,18 @@ class AsyncHTTPClient:
             return results
 
     async def gather_urls_for_asyncio(
-        self, uri: str | list, headers: dict | None = None, params: dict | None = None
+        self,
+        http_request_method: str,
+        uri: str | list,
+        headers: dict | None = None,
+        params: dict | None = None,
+        post_data: dict | None = None,
     ):
         """Create a list of tasks required for asyncio to run. These tasks are httpx
         request futures.
 
         Args:
+            http_request_method (str): Which HTTP request method to use (get or post)
             uri (str | list): A single HTTP URI, or list of HTTP URIs to fetch. If uri
             is a list, it must be in the format of: [uri, headers, params].
 
@@ -127,12 +168,24 @@ class AsyncHTTPClient:
         if type(uri) is str:
             if headers or params:
                 tasks.append(
-                    self.fetch_api_data(uri=uri, headers=headers, params=params)
+                    self.fetch_api_data(
+                        http_request_method=http_request_method,
+                        uri=uri,
+                        headers=headers,
+                        params=params,
+                        post_data=post_data,
+                    )
                 )
         else:
             for url in uri:
                 tasks.append(
-                    self.fetch_api_data(uri=url[0], headers=url[1], params=url[2])
+                    self.fetch_api_data(
+                        http_request_method=http_request_method,
+                        uri=url[0],
+                        headers=url[1],
+                        params=url[2],
+                        post_data=post_data,
+                    )
                 )
 
         return await asyncio.gather(*tasks)
@@ -148,7 +201,7 @@ class AsyncHTTPClient:
         """Helper function to issue API requests through HTTPX
 
         Args:
-            http_request_method (str): Which HTTP request method to use (get or post)
+            http_request_method (str): Which HTTP request method to use (GET or POST)
             uri (str): A HTTP URI to fetch
             headers (dict): HTTP headers to include with this request.
             params (dict | None, optional): HTTP query parameters to include with this request.
@@ -267,92 +320,33 @@ class AsyncHTTPClient:
             return resp
 
     @async_timeit
-    async def post(self, uri: str, headers: dict, post_data: dict):
-        error_message = "An error occurred obtaining vehicle inventory for this search."
-        try:
-            resp = await self.client.post(uri, headers=headers, json=post_data)
-            resp.raise_for_status()
+    async def get(self, uri: str, headers: dict, params: dict) -> httpx.Response:
+        """Perform an HTTP GET request for a given URL
 
-        except (httpx.TimeoutException, httpx.ReadTimeout) as e:
-            error_data = f"The request to {e.request.url!r} timed out."
-            send_error_to_gcp(
-                error_message,
-                http_context={
-                    "method": e.request.method,
-                    "url": str(e.request.url),
-                    "user_agent": headers.get("User-Agent"),
-                    "status_code": "504",
-                },
-            )
-            return error_response(error_message=error_message, error_data=error_data)
+        Args:
+            uri (str): The URI to which this request will be made
+            headers (dict): HTTP headers to include with this request
+            params (dict): HTTP query parameters to include with this request.
 
-        except httpx.NetworkError as e:
-            error_data = f"A network error occurred for {e.request.url!r}. {e}."
-            send_error_to_gcp(
-                error_message,
-                http_context={
-                    "method": e.request.method,
-                    "url": str(e.request.url),
-                    "user_agent": headers.get("User-Agent"),
-                    "status_code": "503",
-                },
-            )
-            return error_response(error_message=error_message, error_data=error_data)
+        Returns:
+            httpx.Response: An HTTPX response for this request.
+        """
+        return await self.execute_requests(
+            http_request_method="GET", uri=uri, headers=headers, params=params
+        )
 
-        except httpx.DecodingError as e:
-            error_data = f"""Decoding of the response to {e.request.url!r} failed,
-                due to a malformed encoding. {e}."""
-            send_error_to_gcp(
-                error_message,
-                http_context={
-                    "method": e.request.method,
-                    "url": str(e.request.url),
-                    "user_agent": headers.get("User-Agent"),
-                    "status_code": "400",
-                },
-            )
-            return error_response(error_message=error_message, error_data=error_data)
+    @async_timeit
+    async def post(self, uri: str, headers: dict, post_data: dict) -> httpx.Response:
+        """Perform an HTTP POST request for a given URL
 
-        except httpx.TooManyRedirects as e:
-            error_data = f"Too many redirects for {e.request.url!r} failed. {e}."
-            send_error_to_gcp(
-                error_message,
-                http_context={
-                    "method": e.request.method,
-                    "url": str(e.request.url),
-                    "user_agent": headers.get("User-Agent"),
-                    "status_code": "429",
-                },
-            )
-            return error_response(error_message=error_message, error_data=error_data)
+        Args:
+            uri (str): The URI to which this request will be made
+            headers (dict): HTTP headers to include with this request
+            post_data (dict): Request body to be included with this request
 
-        # Base exceptions to catch all remaining errors
-        except httpx.HTTPStatusError as e:
-            error_data = f"""Error response {e.response.status_code} while requesting
-            {e.request.url!r}."""
-            send_error_to_gcp(
-                error_message,
-                http_context={
-                    "method": e.request.method,
-                    "url": str(e.request.url),
-                    "user_agent": headers.get("User-Agent"),
-                    "status_code": "500",
-                },
-            )
-            return error_response(error_message=error_message, error_data=error_data)
-
-        except httpx.RequestError as e:
-            error_data = f"An error occurred while requesting {e.request.url!r}. {e}"
-            send_error_to_gcp(
-                error_message,
-                http_context={
-                    "method": e.request.method,
-                    "url": str(e.request.url),
-                    "user_agent": headers.get("User-Agent"),
-                    "status_code": "400",
-                },
-            )
-            return error_response(error_message=error_message, error_data=error_data)
-
-        else:
-            return resp
+        Returns:
+            httpx.Response: An HTTPX response for this request.
+        """
+        return await self.execute_requests(
+            http_request_method="POST", uri=uri, headers=headers, post_data=post_data
+        )
