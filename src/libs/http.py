@@ -138,23 +138,35 @@ class AsyncHTTPClient:
         return await asyncio.gather(*tasks)
 
     async def fetch_api_data(
-        self, uri: str, headers: dict, params: dict | None = None
+        self,
+        http_request_method: str,
+        uri: str,
+        headers: dict,
+        params: dict | None = None,
+        post_data: dict | None = None,
     ) -> dict:
         """Helper function to issue API requests through HTTPX
 
         Args:
+            http_request_method (str): Which HTTP request method to use (get or post)
             uri (str): A HTTP URI to fetch
             headers (dict): HTTP headers to include with this request.
             params (dict | None, optional): HTTP query parameters to include with this request.
             Defaults to None.
+            post_data (dict | None, optional): Request body to be included with a HTTP
+            POST request to the specified API. Defaults to None.
 
         Returns:
             ResponseObject: The HTTP response from the requested URL.
         """
+
         error_message = "An error occurred obtaining vehicle inventory for this search."
 
         try:
-            resp = await self.client.get(uri, headers=headers, params=params)
+            if http_request_method.lower() == "get":
+                resp = await self.client.get(uri, headers=headers, params=params)
+            elif http_request_method.lower() == ("post"):
+                resp = await self.client.post(uri, headers=headers, json=post_data)
             resp.raise_for_status()
 
         except (httpx.TimeoutException, httpx.ReadTimeout) as e:
