@@ -32,6 +32,8 @@ class CommonInventoryQueryParams:
         "^i4$",  # BMW i4
         "^i7$",  # BMW i7
         "^9$",  # BMW ix
+        "^536$",  # Volvo XC40 Recharge
+        "^539$",  # Volvo C40 Recharge
     ]
 
     def __init__(
