@@ -14,6 +14,7 @@ from src.routers import (
     kia,
     logger,
     volkswagen,
+    volvo,
 )
 
 app = FastAPI(docs_url=None, redoc_url=None)
@@ -26,6 +27,7 @@ app.include_router(genesis.router)
 app.include_router(hyundai.router)
 app.include_router(kia.router)
 app.include_router(volkswagen.router)
+app.include_router(volvo.router)
 
 app.include_router(helpers.router)
 app.include_router(logger.router)
