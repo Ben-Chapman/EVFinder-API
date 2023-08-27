@@ -30,10 +30,12 @@ async def get_volvo_inventory(
     req: Request, common_params: CommonInventoryQueryParams = Depends()
 ) -> dict:
     geo = req.query_params.get("geo")
-    # year = common_params.year
-    # model = common_params.model
+    year = str(common_params.year)
+    model = str(common_params.model)
     radius = common_params.radius
     ua = req.headers.get("User-Agent")
+
+    volvo_data = {"inventory": [], "dealers": []}
 
     try:
         # Make a call to get dealer information for this inventory request. This information
@@ -47,6 +49,11 @@ async def get_volvo_inventory(
         dealer_ids = [
             i["partnerId"] for i in dealer_data if i["distanceFromPoint"] <= radius
         ]
+
+        # Write all the dealer information to volvo_data, which will be returned to the
+        # front end. This information will be needed to display dealer detail in the UI.
+        volvo_data["dealers"] = dealer_data
+
     except RuntimeError:
         return error_response(
             error_message="Volvo dealer information could not be found for this request."
@@ -75,17 +82,9 @@ async def get_volvo_inventory(
                     "value": {
                         "dealerId": {"value": [{"value": i} for i in dealer_ids]},
                         "available": {"value": [{"value": True}]},
-                        # "commonSalesType": {
-                        #     "value": [
-                        #         {"value": "28A"},
-                        #         {"value": "30A"},
-                        #         {"value": "30C"},
-                        #     ]
-                        # },
-                        # "orderBrandStatusPoint": {
-                        #     "value": [{"value": {"min": 11200, "max": 16500}}]
-                        # },
                         "engineType": {"value": [{"value": "BEV"}]},
+                        "modelCode": {"value": [{"value": model}]},
+                        "modelYear": {"value": [{"value": year}]},
                     }
                 },
                 "sort": [{"field": "orderDeliveryDate", "desc": False}],
@@ -112,7 +111,7 @@ async def get_volvo_inventory(
         )
 
     total_count = data["data"]["stockCars"]["metadata"]["totalHits"]
-    total_inventory = []
+
     if total_count > take_value:
         print(f"Making more api calls: {total_count}")
         # We have more inventory to fetch
@@ -141,19 +140,24 @@ async def get_volvo_inventory(
         await http.close()
 
     try:
-        total_inventory.append(data["data"]["stockCars"]["hits"])
+        volvo_data["inventory"].append(data["data"]["stockCars"]["hits"])
+        # The HTTP helper library will return a list of httpx.Responses if more than one
+        # additional HTTP request was made. If just one additional HTTP request was made
+        # just the single httpx.Response will be returned. Dealing with that here.
         if type(remainder) == list:
             [
-                total_inventory.append(i.json()["data"]["stockCars"]["hits"])
+                volvo_data["inventory"].append(i.json()["data"]["stockCars"]["hits"])
                 for i in remainder
             ]
         else:
-            total_inventory.append(remainder.json()["data"]["stockCars"]["hits"])
+            volvo_data["inventory"].append(
+                remainder.json()["data"]["stockCars"]["hits"]
+            )
     except Exception:
         pass
 
     return send_response(
-        response_data=total_inventory,
+        response_data=volvo_data,
         cache_control_age=3600,
     )
 
