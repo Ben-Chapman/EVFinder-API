@@ -84,7 +84,7 @@ class AsyncHTTPClient:
         Args:
             http_request_method (str): Which HTTP request method to use (get or post)
             uri (str | list): A single HTTP URI, or list of HTTP URIs to fetch. If uri
-            is a list, it must be in the format of: [uri, headers, params].
+            is a list, it must be in the format of: [uri, headers, params|post_data].
 
             headers (dict | None, optional): HTTP headers to include with this request.
             Defaults to None.
@@ -152,7 +152,7 @@ class AsyncHTTPClient:
         Args:
             http_request_method (str): Which HTTP request method to use (get or post)
             uri (str | list): A single HTTP URI, or list of HTTP URIs to fetch. If uri
-            is a list, it must be in the format of: [uri, headers, params].
+            is a list, it must be in the format of: [uri, headers, params|post_data].
 
             headers (dict | None, optional): HTTP headers to include with this request.
             Defaults to None.
@@ -178,15 +178,24 @@ class AsyncHTTPClient:
                 )
         else:
             for url in uri:
-                tasks.append(
-                    self.fetch_api_data(
-                        http_request_method=http_request_method,
-                        uri=url[0],
-                        headers=url[1],
-                        params=url[2],
-                        post_data=post_data,
+                if http_request_method.lower() == "get":
+                    tasks.append(
+                        self.fetch_api_data(
+                            http_request_method=http_request_method,
+                            uri=url[0],
+                            headers=url[1],
+                            params=url[2],
+                        )
                     )
-                )
+                elif http_request_method.lower() == "post":
+                    tasks.append(
+                        self.fetch_api_data(
+                            http_request_method=http_request_method,
+                            uri=url[0],
+                            headers=url[1],
+                            post_data=url[2],
+                        )
+                    )
 
         return await asyncio.gather(*tasks)
 
@@ -336,7 +345,12 @@ class AsyncHTTPClient:
         )
 
     @async_timeit
-    async def post(self, uri: str, headers: dict, post_data: dict) -> httpx.Response:
+    async def post(
+        self,
+        uri: str | list,
+        headers: dict | None = None,
+        post_data: dict | None = None,
+    ) -> httpx.Response:
         """Perform an HTTP POST request for a given URL
 
         Args:
