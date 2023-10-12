@@ -23,7 +23,6 @@ async def get_bmw_inventory(
     radius = str(common_params.radius)
 
     headers = {
-        "User-Agent": req.headers.get("User-Agent"),
         "Referer": "https://www.bmwusa.com/inventory.html",
     }
 
@@ -75,7 +74,6 @@ async def get_bmw_inventory(
 @router.get("/vin/bmw")
 async def get_bmw_vin_detail(req: Request) -> dict:
     headers = {
-        "User-Agent": req.headers.get("User-Agent"),
         "Referer": "https://www.bmwusa.com/inventory/",
     }
 
