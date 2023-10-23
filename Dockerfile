@@ -9,9 +9,12 @@ COPY src $API_HOME/src
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 CMD [ \
-  "hypercorn", \
-  "--worker-class", "uvloop", \
-  "--workers", "2", \
-  "--bind", ":8080", \
-  "src.main:app" \
+  "uvicorn", \
+  "src.main:app", \
+  "--host", "0.0.0.0", \
+  "--port", "8080", \
+  "--loop", "uvloop", \
+  "--http", "httptools", \
+  "--ws", "none", \
+  "--timeout-keep-alive", "30" \
   ]
