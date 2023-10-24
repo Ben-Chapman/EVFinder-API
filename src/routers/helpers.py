@@ -1,5 +1,4 @@
 import os
-import httpx
 from fastapi import APIRouter, Path
 
 from src.libs.responses import error_response, send_response
