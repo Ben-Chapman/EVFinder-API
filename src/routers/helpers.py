@@ -1,5 +1,4 @@
 import os
-
 from fastapi import APIRouter, Path
 
 from src.libs.responses import error_response, send_response
@@ -7,6 +6,31 @@ from src.libs.http import AsyncHTTPClient
 
 router = APIRouter(prefix="/api")
 verify_ssl = True
+
+
+@router.get("/liveness")
+async def get_instance_metadata_for_healthcheck():
+    """An API endpoint used as a Cloud Run liveness probe.
+    Makes an HTTP request to the GCP metadata service to serve as a simple validation for
+    the ability to accept an API request and make a outbound HTTP request to a third-party
+    endpoint.
+
+    Returns:
+        int: HTTP status code for the GCP metadata request.
+    """
+
+    headers = {"Metadata-Flavor": "Google"}
+
+    async with AsyncHTTPClient(
+        base_url="http://metadata.google.internal",
+        timeout_value=10.0,
+        verify=verify_ssl,
+    ) as http:
+        g = await http.get(
+            uri="/computeMetadata/v1/instance/id",
+            headers=headers,
+        )
+        return g.status_code
 
 
 @router.get("/version")
