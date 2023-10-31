@@ -30,6 +30,7 @@ class CommonInventoryQueryParams:
         "^etrongt$",  # Audi e-tron GT
         "^q4$",  # Audi Q4 e-tron
         "^i4$",  # BMW i4
+        "^i5$",  # BMW i5
         "^i7$",  # BMW i7
         "^9$",  # BMW ix
     ]
