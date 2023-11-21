@@ -16,7 +16,7 @@ class AsyncHTTPClient:
         use_http2: bool = True,
         verify: bool = True,
     ):
-        """A HTTP helper library to be used to fetch manufacturer inventory. This library
+        """A HTTP helper library used to fetch manufacturer inventory. This library
         is designed to be called directly or used as a context manager and is async
         compatible.
 
@@ -49,9 +49,7 @@ class AsyncHTTPClient:
 
     async def __aexit__(self, exception_type, exception_value, traceback):
         end_time = time.perf_counter()
-        print(
-            f"Transaction for {self.base_url} took {end_time - self.start_time} seconds."
-        )
+        print(f"{end_time - self.start_time} sec - {self.base_url}")
         await self.client.aclose()
 
     async def close(self):
@@ -92,6 +90,61 @@ class AsyncHTTPClient:
             # If for some reason we don't have a running event loop, start one
             result = asyncio.run(
                 self.gather_urls_for_asyncio(uri, headers, params, method="get")
+            )
+
+        results = await result
+
+        # If the length of the results list is 1, this is likely the result of a single
+        # HTTP request. So returning just that done result, not a list containing one item.
+        # If the length is > 1, return the list containing the httpx.Responses.
+        # TODO: Return all results as a list. Will need to refactor all manufacturer
+        # routers.
+        if len(results) == 1:
+            return results[0]
+        else:
+            return results
+
+    async def post(
+        self,
+        uri: str | list,
+        headers: dict | None = None,
+        post_data: dict | None = None,
+    ) -> list | httpx.Response:
+        """Wrap the asyncio coroutine into a Task and schedule its execution.
+
+        Args:
+            uri (str | list): A single HTTP URI, or list of HTTP URIs to fetch. If uri
+            is a list, it must be in the format of: [uri, headers, params].
+
+            headers (dict | None, optional): HTTP headers to include with this request.
+            Defaults to None.
+
+            post_data (dict | None, optional): HTTP POST data to include with this request.
+            Defaults to None.
+
+        Returns:
+            (list | httpx.Response): The result of an asyncio Task object.
+            If multiple URLs were fetched, returns a list of httpx.Responses. If a single
+            URL was fetched returns a single httpx.Response.
+        """
+        # Make sure we have a running event loop
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:  # 'RuntimeError: There is no current event loop...'
+            loop = None
+
+        if loop and loop.is_running():
+            result = loop.create_task(
+                self.gather_urls_for_asyncio(
+                    uri=uri, headers=headers, params=post_data, method="post"
+                )
+            )
+        else:
+            # If for some reason we don't have a running event loop, start one
+            result = asyncio.run(
+                self.gather_urls_for_asyncio(
+                    uri=uri, headers=headers, params=post_data, method="post"
+                )
             )
 
         results = await result
@@ -181,10 +234,9 @@ class AsyncHTTPClient:
 
         try:
             if method == "get":
-                resp = await self.client.get(uri, headers=headers, params=params)
+                resp = await self.client.get(url=uri, headers=headers, params=params)
             elif method == "post":
-                print("POST here...")
-                resp = await self.client.post(uri, headers=headers, post_data=params)
+                resp = await self.client.post(url=uri, headers=headers, json=params)
             resp.raise_for_status()
 
         except (httpx.TimeoutException, httpx.ReadTimeout) as e:
@@ -283,147 +335,3 @@ class AsyncHTTPClient:
 
         else:
             return resp
-
-    async def post(
-        self,
-        uri: str | list,
-        headers: dict | None = None,
-        post_data: dict | None = None,
-    ) -> list | httpx.Response:
-        """Wrap the asyncio coroutine into a Task and schedule its execution.
-
-        Args:
-            uri (str | list): A single HTTP URI, or list of HTTP URIs to fetch. If uri
-            is a list, it must be in the format of: [uri, headers, params].
-
-            headers (dict | None, optional): HTTP headers to include with this request.
-            Defaults to None.
-
-            post_data (dict | None, optional): HTTP POST data to include with this request.
-            Defaults to None.
-
-        Returns:
-            (list | httpx.Response): The result of an asyncio Task object.
-            If multiple URLs were fetched, returns a list of httpx.Responses. If a single
-            URL was fetched returns a single httpx.Response.
-        """
-
-        # Make sure we have a running event loop
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:  # 'RuntimeError: There is no current event loop...'
-            loop = None
-
-        if loop and loop.is_running():
-            result = loop.create_task(
-                self.gather_urls_for_asyncio(
-                    uri, headers, params=post_data, method="post"
-                )
-            )
-        else:
-            # If for some reason we don't have a running event loop, start one
-            result = asyncio.run(
-                self.gather_urls_for_asyncio(
-                    uri, headers, params=post_data, method="post"
-                )
-            )
-
-        results = await result
-
-        # If the length of the results list is 1, this is likely the result of a single
-        # HTTP request. So returning just that one result, not a list containing one item.
-        # If the length is > 1, return the list containing the httpx.Responses.
-        # TODO: Return all results as a list. Will need to refactor all manufacturer
-        # routers.
-        if len(results) == 1:
-            return results[0]
-        else:
-            return results
-
-        # try:
-        #     resp = await self.client.post(uri, headers=headers, json=post_data)
-        #     resp.raise_for_status()
-
-        # except (httpx.TimeoutException, httpx.ReadTimeout) as e:
-        #     error_data = f"The request to {e.request.url!r} timed out."
-        #     send_error_to_gcp(
-        #         error_message,
-        #         http_context={
-        #             "method": e.request.method,
-        #             "url": str(e.request.url),
-        #             "user_agent": headers.get("User-Agent"),
-        #             "status_code": "504",
-        #         },
-        #     )
-        #     return error_response(error_message=error_message, error_data=error_data)
-
-        # except httpx.NetworkError as e:
-        #     error_data = f"A network error occurred for {e.request.url!r}. {e}."
-        #     send_error_to_gcp(
-        #         error_message,
-        #         http_context={
-        #             "method": e.request.method,
-        #             "url": str(e.request.url),
-        #             "user_agent": headers.get("User-Agent"),
-        #             "status_code": "503",
-        #         },
-        #     )
-        #     return error_response(error_message=error_message, error_data=error_data)
-
-        # except httpx.DecodingError as e:
-        #     error_data = f"""Decoding of the response to {e.request.url!r} failed,
-        #         due to a malformed encoding. {e}."""
-        #     send_error_to_gcp(
-        #         error_message,
-        #         http_context={
-        #             "method": e.request.method,
-        #             "url": str(e.request.url),
-        #             "user_agent": headers.get("User-Agent"),
-        #             "status_code": "400",
-        #         },
-        #     )
-        #     return error_response(error_message=error_message, error_data=error_data)
-
-        # except httpx.TooManyRedirects as e:
-        #     error_data = f"Too many redirects for {e.request.url!r} failed. {e}."
-        #     send_error_to_gcp(
-        #         error_message,
-        #         http_context={
-        #             "method": e.request.method,
-        #             "url": str(e.request.url),
-        #             "user_agent": headers.get("User-Agent"),
-        #             "status_code": "429",
-        #         },
-        #     )
-        #     return error_response(error_message=error_message, error_data=error_data)
-
-        # # Base exceptions to catch all remaining errors
-        # except httpx.HTTPStatusError as e:
-        #     error_data = f"""Error response {e.response.status_code} while requesting
-        #     {e.request.url!r}."""
-        #     send_error_to_gcp(
-        #         error_message,
-        #         http_context={
-        #             "method": e.request.method,
-        #             "url": str(e.request.url),
-        #             "user_agent": headers.get("User-Agent"),
-        #             "status_code": "500",
-        #         },
-        #     )
-        #     return error_response(error_message=error_message, error_data=error_data)
-
-        # except httpx.RequestError as e:
-        #     error_data = f"An error occurred while requesting {e.request.url!r}. {e}"
-        #     send_error_to_gcp(
-        #         error_message,
-        #         http_context={
-        #             "method": e.request.method,
-        #             "url": str(e.request.url),
-        #             "user_agent": headers.get("User-Agent"),
-        #             "status_code": "400",
-        #         },
-        #     )
-        #     return error_response(error_message=error_message, error_data=error_data)
-
-        # else:
-        #     return resp
