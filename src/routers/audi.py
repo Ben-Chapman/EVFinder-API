@@ -1,3 +1,4 @@
+import copy
 from fastapi import APIRouter, Depends, Request
 
 from src.libs.common_query_params import CommonInventoryQueryParams
@@ -82,11 +83,13 @@ async def get_audi_inventory(
         urls_to_fetch = []
 
         for i in range(begin_index, end_index, step):
+            # Make a deep copy of the inventory_post_data dict to allow for value updates
+            # in this loop
+            tmp = copy.deepcopy(inventory_post_data)
+            tmp["variables"]["offset"] = i
+
             # Add the post data to our URL list
-            urls_to_fetch.append(["/", headers, inventory_post_data])
-            # Update the offset parameter for in the URL list. Performing a two-step
-            # operation to deal with the shallow copy of the inventory_post_data dict.
-            urls_to_fetch[0][2]["variables"]["offset"] = i
+            urls_to_fetch.append(["/", headers, tmp])
 
         remainder = await http.post(uri=urls_to_fetch)
 
@@ -96,12 +99,15 @@ async def get_audi_inventory(
         if type(remainder) is not list:
             remainder = [remainder]
 
-        inventory_data["rdata"] = []
-
         for api_result in remainder:
             try:
                 result = api_result.json()
-                inventory_data["rdata"].append(result)
+                remainder_vehicles = result["data"]["getFilteredVehiclesForWormwood"][
+                    "vehicles"
+                ]
+                inventory_data["data"]["getFilteredVehiclesForWormwood"][
+                    "vehicles"
+                ].extend(remainder_vehicles)
             except AttributeError:
                 inv["apiErrorResponse"] = True
 
