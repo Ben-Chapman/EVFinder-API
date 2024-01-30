@@ -15,6 +15,7 @@ class CommonInventoryQueryParams:
         "^Kona(%20|\+|\s)Ev$",  # Hyundai Kona EV  # noqa: W605
         "^N$",  # Kia EV6
         "^V$",  # Kia Niro EV
+        "^P$",  # Kia EV9
         "^GV60$",  # Genesis GV60
         "^ELECTRIFIED-G80$",  # Genesis Electrified G80
         "^ELECTRIFIED-GV70$",  # Genesis Electrified GV70
