@@ -43,7 +43,7 @@ class CommonInventoryQueryParams:
         zip: int = Query(ge=501, le=99950),
         year: int = Query(ge=2022, le=2024),
         radius: int = Query(gt=0, lt=1000),
-        model: str = Query(regex="|".join(valid_models)),
+        model: str = Query(pattern="|".join(valid_models)),
     ):
         # Zip is passed in as a query parameter string. When casting to an int, the
         # leading 0s are stripped, so "00501" becomes 501. So, padding with 0s as needed.
