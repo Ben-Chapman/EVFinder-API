@@ -34,7 +34,7 @@ app.include_router(logger.router)
 origins = [
     "https://theevfinder.com",
     "https://www.theevfinder.com",
-    "http://dev.theevfinder.com",
+    "https://dev.theevfinder.com",
     "http://bs-local.com:8080",
     "http://localhost:8080",
 ]
