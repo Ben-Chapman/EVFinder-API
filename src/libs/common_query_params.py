@@ -10,9 +10,9 @@ class CommonInventoryQueryParams:
     """
 
     valid_models = [
-        "^Ioniq(%20|\+|\s|\-)5$",  # Hyundai Ioniq 5  # noqa: W605
-        "^Ioniq(%20|\+|\s|\-)6$",  # Hyundai Ioniq 6  # noqa: W605
-        "^Kona(%20|\+|\s)Ev$",  # Hyundai Kona EV  # noqa: W605
+        r"^Ioniq(%20|\+|\s|\-)5((%20|\+|\-)N)?$",  # Hyundai Ioniq 5 and 5 N  # noqa: W605
+        r"^Ioniq(%20|\+|\s|\-)6$",  # Hyundai Ioniq 6  # noqa: W605
+        r"^Kona(%20|\+|\s)Ev$",  # Hyundai Kona EV  # noqa: W605
         "^N$",  # Kia EV6
         "^V$",  # Kia Niro EV
         "^P$",  # Kia EV9
@@ -41,13 +41,13 @@ class CommonInventoryQueryParams:
         self,
         # https://facts.usps.com/42000-zip-codes/. Starting zip code is 00501
         zip: int = Query(ge=501, le=99950),
-        year: int = Query(ge=2022, le=2024),
+        year: int = Query(ge=2022, le=2025),
         radius: int = Query(gt=0, lt=1000),
         model: str = Query(pattern="|".join(valid_models)),
     ):
         # Zip is passed in as a query parameter string. When casting to an int, the
-        # leading 0s are stripped, so "00501" becomes 501. So, padding with 0s as needed.
-        self.zip = f"{zip:05}"
+        # leading 0s are stripped, so "00501" becomes 501. Padding with 0s as needed.
+        self.zip = f"{zip:05}"  # noqa: E231
         self.year = year
         self.radius = radius
         self.model = model
