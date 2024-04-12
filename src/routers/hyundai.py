@@ -45,7 +45,7 @@ async def get_hyundai_inventory(
         inventory["status"]
     except KeyError:
         return error_response(
-            error_message="Invalid data received from the Hyundai API",
+            error_message="An error occurred obtaining vehicle inventory for this search.",
             error_data=inventory,
             status_code=500,
         )
@@ -53,9 +53,14 @@ async def get_hyundai_inventory(
     if "SUCCESS" in inventory["status"]:
         return send_response(response_data=inventory)
     else:
+        try:
+            error_message = inventory.text
+        except AttributeError:
+            error_message = inventory["status"]
+
         return error_response(
-            error_message="Received invalid data from the Hyundai API",
-            error_data=inventory.text,
+            error_message="An error occurred obtaining vehicle inventory for this search.",
+            error_data=error_message,
             status_code=400,
         )
 
@@ -97,7 +102,7 @@ async def get_hyundai_vin_detail(req: Request) -> dict:
                 return send_response(response_data=vin_data)
             else:
                 return error_response(
-                    error_message="Received invalid data from the Hyundai API",
+                    error_message="An error occurred obtaining VIN detail for this vehicle.",
                     error_data=vin_data,
                     status_code=400,
                 )
