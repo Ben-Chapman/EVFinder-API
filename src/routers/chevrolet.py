@@ -6,7 +6,7 @@ from src.libs.http import AsyncHTTPClient
 
 router = APIRouter(prefix="/api")
 verify_ssl = True
-chevrolet_base_url = "https://www.chevrolet.com/electric/shopping/api/drp-cp-api/p/v1"
+chevrolet_base_url = "https://www.chevrolet.com/chevrolet/shopping/api"
 
 
 @router.get("/inventory/chevrolet")
@@ -17,39 +17,24 @@ async def get_chevrolet_inventory(
 
     headers = {
         "User-Agent": req.headers.get("User-Agent"),
-        "referer": "https://chevrolet.com/referer/path",
+        "referer": "https://www.chevrolet.com/shopping/inventory/search",
+        "client": "T1_VSR",
+        "tenantId": "0",
+        "dealerId": "0",
+        "oemId": "GM",
+        "programId": "CHEVROLET",
     }
 
     inventory_post_data = {
-        "name": "DrpInventory",
-        "filters": [
-            {
-                "field": "model",
-                "operator": "IN",
-                "values": [common_params.model],
-                "key": "model",
-            },
-            {
-                "field": "year",
-                "operator": "IN",
-                "values": [common_params.year],
-                "key": "year",
-            },
-            {
-                "field": "radius",
-                "operator": "IN",
-                "values": [common_params.radius],
-                "key": "radius",
-            },
-            {
-                "field": "zipcode",
-                "operator": "IN",
-                "values": [common_params.zip],
-                "key": "zipcode",
-            },
-        ],
-        "sort": [{"field": "distance", "order": "ASC"}],
-        "pageInfo": {"rows": 1000},
+        "filters": {
+            "stockType": {"values": ["DealerStock"]},
+            "year": {"values": [str(common_params.year)]},
+            "model": {"values": [common_params.model.lower()]},
+            "geo": {"zipCode": common_params.zip, "radius": common_params.radius},
+        },
+        "sort": {"name": "distance", "order": "ASC"},
+        "paymentTypes": ["CASH"],
+        "pagination": {"size": 100},
     }
 
     async with AsyncHTTPClient(
@@ -57,7 +42,7 @@ async def get_chevrolet_inventory(
         timeout_value=30.0,
     ) as http:
         g = await http.post(
-            uri="/vehicles",
+            uri="/aec-cp-discovery-api/p/v1/vehicles/search",
             headers=headers,
             post_data=inventory_post_data,
         )
@@ -66,30 +51,42 @@ async def get_chevrolet_inventory(
         data = g.json()
     except ValueError:
         return error_response(
-            error_message=f"An error occurred with the Chevrolet API: {g.text}"
+            error_message=f"An error occurred with the Chevrolet inventory service: {g.text}"
         )
     try:
-        # If the inventory request was successful, even if 0 vehicles are returned
-        # the response will have the ['listResponse'] dict, so validating that
-        data["data"]["listResponse"]
+        # If the inventory request was successful, the response will have the
+        # ['data']['hist'] dict
+        data["data"]["hits"]
         return send_response(
             response_data=data,
             cache_control_age=3600,
         )
+
     except KeyError:
-        print(data)
-        error_message = "An error occurred with the Chevrolet API"
-        return error_response(error_message=error_message, error_data=data)
+        error_message = "An error occurred with the Chevrolet inventory service"
+        try:
+            # If no inventory was found, the response will have this value. Checking
+            # for that, and returning an empty dict if so
+            assert data["errorDetails"]["key"] == "inventory.notFound"
+            return send_response(response_data={})
+        except KeyError:
+            error_detail = data["errorDetails"]["key"]
+            return error_response(error_message=error_message, error_data=error_detail)
 
 
 @router.get("/vin/chevrolet")
 async def get_chevrolet_vin_detail(req: Request) -> dict:
     headers = {
         "User-Agent": req.headers.get("User-Agent"),
+        "client": "UI",
+        "tenantId": "0",
+        "dealerId": "0",
+        "oemId": "GM",
+        "programId": "CHEVROLET",
     }
 
     vin = req.query_params.get("vin")
-    vin_post_data = {"key": "VIN", "value": vin}
+    vin_post_data = {"vin": vin}
 
     async with AsyncHTTPClient(
         base_url=chevrolet_base_url,
@@ -97,16 +94,17 @@ async def get_chevrolet_vin_detail(req: Request) -> dict:
         verify=verify_ssl,
     ) as http:
         g = await http.post(
-            uri="/vehicles/details",
+            uri="/aec-cp-ims-apigateway/p/v1/vehicles/detail",
             headers=headers,
             post_data=vin_post_data,
         )
         data = g.json()
 
-    status_text = data.get("status")
+    try:
+        vin_data = data["data"]["id"]
+        return send_response(response_data=vin_data, cache_control_age=3600)
+    except KeyError:
+        error_message = f"""An error occurred with the Chevrolet inventory service when
+        fetching VIN details for {vin}"""
 
-    if status_text and status_text != "success":
-        error_message = f"An error occurred with the Chevrolet API when fetching VIN details for {vin}"  # noqa: B950
-        return error_response(error_message=error_message, error_data=data)
-
-    return send_response(response_data=data, cache_control_age=3600)
+        return error_response(error_message=error_message, error_data=data["data"])
