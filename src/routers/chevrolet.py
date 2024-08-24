@@ -53,25 +53,20 @@ async def get_chevrolet_inventory(
         return error_response(
             error_message=f"An error occurred with the Chevrolet inventory service: {g.text}"
         )
+
+    error_message = "An error occurred with the Chevrolet inventory service"
     try:
-        # If the inventory request was successful, the response will have the
-        # ['data']['hist'] dict
         data["data"]["hits"]
         return send_response(
             response_data=data,
             cache_control_age=3600,
         )
-
     except KeyError:
-        error_message = "An error occurred with the Chevrolet inventory service"
         try:
-            # If no inventory was found, the response will have this value. Checking
-            # for that, and returning an empty dict if so
-            assert data["errorDetails"]["key"] == "inventory.notFound"
+            data["errorDetails"]["key"]
             return send_response(response_data={})
-        except KeyError:
-            error_detail = data["errorDetails"]["key"]
-            return error_response(error_message=error_message, error_data=error_detail)
+        except Exception:
+            return error_response(error_message=error_message, error_data=data)
 
 
 @router.get("/vin/chevrolet")
