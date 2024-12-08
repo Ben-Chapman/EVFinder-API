@@ -20,6 +20,7 @@ class CommonInventoryQueryParams:
         "^ELECTRIFIED-G80$",  # Genesis Electrified G80
         "^ELECTRIFIED-GV70$",  # Genesis Electrified GV70
         "^ID.4$",  # VW ID.4
+        "^ID. Buzz$",  # VW ID.BUZZ
         "^mache$",  # Ford Mustang Mach-E
         r"^f-150(%20|\+|\s|\-)lightning",  # Ford F-150 Lightning
         "^Blazer EV$",  # Chevrolet Blazer EV
