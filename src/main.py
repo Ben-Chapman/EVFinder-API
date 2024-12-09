@@ -1,5 +1,9 @@
 #!/usr/bin/python3
-from fastapi import FastAPI
+import logging
+import sys
+from datetime import datetime
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
@@ -47,5 +51,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Handles Gzip responses for any request that includes "gzip" in the Accept-Encoding header.
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+
+@app.middleware("http")
+async def log_traffic(request: Request, call_next):
+    start_time = datetime.now()
+    response = await call_next(request)
+    process_time = (datetime.now() - start_time).total_seconds()
+    client_host = request.client.host
+    log_params = {
+        "src_ip": client_host,
+        "request_method": request.method,
+        "request_url": str(request.url),
+        "request_size": request.headers.get("content-length"),
+        "request_headers": dict(request.headers),
+        "request_body": await request.body(),
+        "response_status": response.status_code,
+        "response_size": response.headers.get("content-length"),
+        "response_headers": dict(response.headers),
+        "process_time": process_time,
+    }
+    logging.info(str(log_params))
+    return response
