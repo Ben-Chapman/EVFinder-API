@@ -8,7 +8,7 @@ from src.libs.responses import error_response, send_response
 
 router = APIRouter(prefix="/api")
 verify_ssl = True
-audi_base_url = "https://prod.aoaaudinagateway.svc.audiusa.io/graphql"
+audi_base_url = "https://api.audiusa.com"
 
 
 @router.get("/inventory/audi")
@@ -16,8 +16,7 @@ async def get_audi_inventory(
     req: Request, common_params: CommonInventoryQueryParams = Depends()
 ) -> dict:
     geo = req.query_params.get("geo")
-    # 2024-08 - The Audi inventory API does not support year filtering
-    # year = common_params.year
+    year = common_params.year
     model = common_params.model
     radius = common_params.radius
 
@@ -39,12 +38,13 @@ async def get_audi_inventory(
                 f"geo: {geo}_{radius}_miles_defaultcity,"  # noqa: E231
                 f"model-range.{model},"  # noqa: E231
                 "vtp-drivetrain.electrical,"
+                f"salesModelYear:{year}_{year},"  # noqa: E231
             ),
             "sort": "byDistance:ASC",
             "limit": amount_to_page_by,
             "offset": offset,
-            "preset": "foreign-brand.no,sold-order.no",
-            "ranges": "prices.retail,modelYear,powerHP,available-from.soon",  # noqa: E231
+            "preset": "foreign-brand.no,sold-order.no,stat-import.TAMUSNP",
+            "ranges": "prices.retail,modelYear,powerHP",  # noqa: E231
         },
         "query": "query getFilteredVehiclesForWormwood($version: String, $market: [MarketType]!, $limit: Int, $lang: String!, $filters: String, $sort: String, $offset: Int, $preset: String) { getFilteredVehiclesForWormwood( version: $version market: $market size: $limit lang: $lang filters: $filters sort: $sort from: $offset preset: $preset ) { filterResults { totalCount totalNewCarCount totalUsedCarCount available_from_soon available_from_immediately has_warranties_yes has_warranties_no __typename } vehicles { id interiorColor exteriorColor modelID modelYear modelCode modelName modelPrice modelPowerkW modelMileage audiCode stockNumber trimName kvpsSyncId dealerName dealerRegion vehicleType warrantyType modelImageFromScs isAvailableNow vin bodyType saleOrderType vehicleInventoryType vehicleOrderStatus driveType gearType distanceFromUser __typename } __typename }}",  # noqa: B950
     }
@@ -53,7 +53,9 @@ async def get_audi_inventory(
         base_url=audi_base_url, timeout_value=30.0, verify=verify_ssl
     )
 
-    inv = await http.post(uri="/", headers=headers, post_data=inventory_post_data)
+    inv = await http.post(
+        uri="/graphql", headers=headers, post_data=inventory_post_data
+    )
     try:
         inventory_data = inv.json()
     except ValueError:
@@ -89,7 +91,7 @@ async def get_audi_inventory(
             tmp["variables"]["offset"] = i
 
             # Add the post data to our URL list
-            urls_to_fetch.append(["/", headers, tmp])
+            urls_to_fetch.append(["/graphql", headers, tmp])
 
         remainder = await http.post(uri=urls_to_fetch)
 
@@ -139,7 +141,7 @@ async def get_audi_vin_detail(req: Request) -> dict:
         timeout_value=30.0,
         verify=verify_ssl,
     ) as http:
-        v = await http.post(uri="/", headers=headers, post_data=vin_post_data)
+        v = await http.post(uri="/graphql", headers=headers, post_data=vin_post_data)
         data = v.json()
 
     try:
