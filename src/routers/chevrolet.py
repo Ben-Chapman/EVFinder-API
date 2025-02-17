@@ -96,7 +96,7 @@ async def get_chevrolet_vin_detail(req: Request) -> dict:
         data = g.json()
 
     try:
-        vin_data = data["data"]["id"]
+        vin_data = data["data"]
         return send_response(response_data=vin_data, cache_control_age=3600)
     except KeyError:
         error_message = f"""An error occurred with the Chevrolet inventory service when
