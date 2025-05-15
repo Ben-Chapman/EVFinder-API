@@ -144,8 +144,8 @@ async def get_gmc_vin_detail(req: Request) -> dict:
         base_url=gmc_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         params = {
-            "vin:": req.query_params.get("vin"),
-            "postalCode": req.query_params.get("postalCode"),
+            "vin": req.query_params.get("vin"),
+            "postalCode": req.query_params.get("zip"),
             "customerType": "GC",
             "requesterType": "TIER_1",
             "locale": "en_US",
