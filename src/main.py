@@ -9,6 +9,7 @@ from src.routers import (
     chevrolet,
     ford,
     genesis,
+    gmc,
     helpers,
     hyundai,
     kia,
@@ -23,6 +24,7 @@ app.include_router(audi.router)
 app.include_router(chevrolet.router)
 app.include_router(ford.router)
 app.include_router(genesis.router)
+app.include_router(gmc.router)
 app.include_router(hyundai.router)
 app.include_router(kia.router)
 app.include_router(volkswagen.router)

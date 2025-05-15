@@ -51,16 +51,6 @@ async def main(
         "zipcode": zip_code,
     }
 
-    # Ford apparently does not support radius searches > 500 miles. For now, returning
-    # an error message to users who attempt a search radius > 500  miles.
-    # TODO: Deal with this in the UI, with better info messaging
-    if int(radius) > 500:
-        return error_response(
-            error_message="Retry your request with a radius between 1 and 500 miles.",
-            error_data="",
-            status_code=400,
-        )
-
     dealers_uri = "/aemservices/cache/inventory/dealer/dealers"
     inventory_uri = "/aemservices/cache/inventory/dealer-lot"
 
@@ -190,7 +180,7 @@ async def main(
         inv["rdata"] = {"vehicles": vehicles, "dealers": dealers}
 
     end = time.perf_counter()
-    print(f"\n\n-----\nTime taken for Ford API transaction: {end-start} sec")
+    print(f"\n\n-----\nTime taken for Ford API transaction: {end - start} sec")
 
     await http.close()
     return send_response(response_data=inv, cache_control_age=3600)
