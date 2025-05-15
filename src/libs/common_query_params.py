@@ -36,6 +36,9 @@ class CommonInventoryQueryParams:
         "^i5$",  # BMW i5
         "^i7$",  # BMW i7
         "^9$",  # BMW ix
+        r"^sierra(%20|\+|\s|\-)ev",  # GMC Sierra EV
+        r"^hummer(%20|\+|\s|\-)ev(%20|\+|\s|\-)pickup",  # GMC HUMMER EV Pickup
+        r"^hummer(%20|\+|\s|\-)ev(%20|\+|\s|\-)suv",  # GMC HUMMER EV SUV
     ]
 
     def __init__(
