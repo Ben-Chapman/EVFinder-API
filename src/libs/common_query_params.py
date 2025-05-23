@@ -39,6 +39,10 @@ class CommonInventoryQueryParams:
         r"^sierra(%20|\+|\s|\-)ev",  # GMC Sierra EV
         r"^hummer(%20|\+|\s|\-)ev(%20|\+|\s|\-)pickup",  # GMC HUMMER EV Pickup
         r"^hummer(%20|\+|\s|\-)ev(%20|\+|\s|\-)suv",  # GMC HUMMER EV SUV
+        r"^escalade(%20|\+|\s|\-)iq",  # Cadillac Escalade IQ
+        "lyriq",  # Cadillac Lyriq
+        "optiq",  # Cadillac Optiq
+        "vestiq",  # Cadillac Vistiq
     ]
 
     def __init__(
@@ -46,7 +50,7 @@ class CommonInventoryQueryParams:
         # https://facts.usps.com/42000-zip-codes/. Starting zip code is 00501
         zip: int = Query(ge=501, le=99950),
         year: int = Query(ge=2022, le=2025),
-        radius: int = Query(gt=0, lt=1000),
+        radius: int = Query(gt=0, lt=500),
         model: str = Query(pattern="|".join(valid_models)),
     ):
         # Zip is passed in as a query parameter string. When casting to an int, the
