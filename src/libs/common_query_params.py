@@ -42,7 +42,7 @@ class CommonInventoryQueryParams:
         r"^escalade(%20|\+|\s|\-)iq",  # Cadillac Escalade IQ
         "lyriq",  # Cadillac Lyriq
         "optiq",  # Cadillac Optiq
-        "vestiq",  # Cadillac Vistiq
+        "vistiq",  # Cadillac Vistiq
     ]
 
     def __init__(
