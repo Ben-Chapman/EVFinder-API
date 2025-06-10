@@ -6,9 +6,11 @@ from fastapi.middleware.gzip import GZipMiddleware
 from src.routers import (
     audi,
     bmw,
+    cadillac,
     chevrolet,
     ford,
     genesis,
+    gmc,
     helpers,
     hyundai,
     kia,
@@ -20,9 +22,11 @@ app = FastAPI(docs_url=None, redoc_url=None)
 
 app.include_router(bmw.router)
 app.include_router(audi.router)
+app.include_router(cadillac.router)
 app.include_router(chevrolet.router)
 app.include_router(ford.router)
 app.include_router(genesis.router)
+app.include_router(gmc.router)
 app.include_router(hyundai.router)
 app.include_router(kia.router)
 app.include_router(volkswagen.router)

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Request
 
 from src.libs.common_query_params import CommonInventoryQueryParams
-from src.libs.responses import error_response, send_response
 from src.libs.http import AsyncHTTPClient
+from src.libs.responses import error_response, send_response
 
 router = APIRouter(prefix="/api")
 verify_ssl = True
@@ -53,6 +53,15 @@ async def get_hyundai_inventory(
     if "SUCCESS" in inventory["status"]:
         return send_response(response_data=inventory)
     else:
+        # If the API response does not have a data key, there is no inventory.
+        # Return an empty dict response which the UI will use to display the no inventory
+        # message. This most commonly occurs when the user selects a year that is not
+        # valid for a selected model.
+        try:
+            inventory["data"]
+        except KeyError:
+            return send_response(response_data={})
+
         try:
             error_message = inventory.text
         except AttributeError:

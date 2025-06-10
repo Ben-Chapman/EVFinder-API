@@ -11,7 +11,7 @@ class CommonInventoryQueryParams:
 
     valid_models = [
         r"^Ioniq(%20|\+|\s|\-)5((%20|\+|\-)N)?$",  # Hyundai Ioniq 5 and 5 N  # noqa: W605
-        r"^Ioniq(%20|\+|\s|\-)6$",  # Hyundai Ioniq 6  # noqa: W605
+        r"^Ioniq(%20|\+|\s|\-)(6|9)$",  # Hyundai Ioniq 6, 9  # noqa: W605
         r"^Kona(%20|\+|\s)Ev$",  # Hyundai Kona EV  # noqa: W605
         "^N$",  # Kia EV6
         "^V$",  # Kia Niro EV
@@ -36,14 +36,21 @@ class CommonInventoryQueryParams:
         "^i5$",  # BMW i5
         "^i7$",  # BMW i7
         "^9$",  # BMW ix
+        r"^sierra(%20|\+|\s|\-)ev",  # GMC Sierra EV
+        r"^hummer(%20|\+|\s|\-)ev(%20|\+|\s|\-)pickup",  # GMC HUMMER EV Pickup
+        r"^hummer(%20|\+|\s|\-)ev(%20|\+|\s|\-)suv",  # GMC HUMMER EV SUV
+        r"^escalade(%20|\+|\s|\-)iq",  # Cadillac Escalade IQ
+        "lyriq",  # Cadillac Lyriq
+        "optiq",  # Cadillac Optiq
+        "vistiq",  # Cadillac Vistiq
     ]
 
     def __init__(
         self,
         # https://facts.usps.com/42000-zip-codes/. Starting zip code is 00501
         zip: int = Query(ge=501, le=99950),
-        year: int = Query(ge=2022, le=2025),
-        radius: int = Query(gt=0, lt=1000),
+        year: int = Query(ge=2022, le=2026),
+        radius: int = Query(gt=0, le=500),
         model: str = Query(pattern="|".join(valid_models)),
     ):
         # Zip is passed in as a query parameter string. When casting to an int, the
