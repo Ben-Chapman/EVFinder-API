@@ -1,20 +1,34 @@
+# Copyright 2025 Ben Chapman
+#
+# This file is part of The EV Finder.
+#
+# The EV Finder is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+#
+# The EV Finder is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with The EV Finder.
+# If not, see <https://www.gnu.org/licenses/>.
+
 from fastapi import APIRouter, Depends, Request
 
 from src.libs.common_query_params import CommonInventoryQueryParams
-from src.libs.responses import error_response, send_response
 from src.libs.http import AsyncHTTPClient
+from src.libs.responses import error_response, send_response
 
 router = APIRouter(prefix="/api")
 verify_ssl = True
 chevrolet_base_url = "https://www.chevrolet.com/chevrolet/shopping/api"
+error_message = "An error occurred with the Chevrolet inventory service"
 
 
 @router.get("/inventory/chevrolet")
 async def get_chevrolet_inventory(
     req: Request, common_params: CommonInventoryQueryParams = Depends()
 ) -> dict:
-    """A description of what's unique about the logic for this manufacturer's API"""
-
     headers = {
         "User-Agent": req.headers.get("User-Agent"),
         "referer": "https://www.chevrolet.com/shopping/inventory/search",
@@ -37,36 +51,53 @@ async def get_chevrolet_inventory(
         "pagination": {"size": 100},
     }
 
+    facets_post_data = {
+        "filters": {
+            "year": {"values": [str(common_params.year)]},
+            "model": {"values": [common_params.model.lower()]},
+            "geo": {"zipCode": common_params.zip, "radius": common_params.radius},
+        }
+    }
+
     async with AsyncHTTPClient(
         base_url=chevrolet_base_url,
         timeout_value=30.0,
     ) as http:
-        g = await http.post(
+        i = await http.post(
             uri="/aec-cp-discovery-api/p/v1/vehicles/search",
             headers=headers,
             post_data=inventory_post_data,
         )
-
+        # Some Chevrolet vehicle detail is accessible through a separate API endpoint.
+        # Making that call here, and will combine with the inventory results later.
+        f = await http.post(
+            uri="/aec-cp-discovery-api/p/v1/vehicles/facets",
+            headers=headers,
+            post_data=facets_post_data,
+        )
     try:
-        data = g.json()
+        inventory = i.json()
+        facets = f.json()
     except ValueError:
         return error_response(
-            error_message=f"An error occurred with the Chevrolet inventory service: {g.text}"
+            error_message=f"An error occurred with the Chevrolet inventory service: {i.text}"
         )
 
-    error_message = "An error occurred with the Chevrolet inventory service"
+    # Add vehicle facets to the inventory response
+    inventory["facets"] = facets
+
     try:
-        data["data"]["hits"]
+        inventory["data"]["hits"]
         return send_response(
-            response_data=data,
+            response_data=inventory,
             cache_control_age=3600,
         )
     except KeyError:
         try:
-            data["errorDetails"]["key"]
+            inventory["errorDetails"]["key"]
             return send_response(response_data={})
         except Exception:
-            return error_response(error_message=error_message, error_data=data)
+            return error_response(error_message=error_message, error_data=inventory)
 
 
 @router.get("/vin/chevrolet")
