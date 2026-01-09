@@ -1,30 +1,27 @@
-name: flake8 Lint
+name: Linter and Code Formatting
 on:
-  workflow_dispatch:
-  push:
-    paths:
-      - 'src/**.py'
   pull_request:
-    paths:
-      - 'src/**.py'
-
 jobs:
-  flake8-lint:
+  ruff:
     runs-on: ubuntu-latest
-    name: Lint with Flake8 and Black
     steps:
-      - name: Check out source repository
-        uses: actions/checkout@v3
-      - name: Set up Python environment
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.10"
-      - name: flake8 Lint
-        uses: TrueBrain/actions-flake8@v2
+          activate-environment: "true"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          path: "."
-          extra_arguments: "--config=.flake8"
-          plugins: "flake8-bugbear flake8-black"
-      - name: Verify Formatting with Black
-        uses: psf/black@stable
-     
+          python-version-file: "pyproject.toml"
+
+      - name: Install app dependencies
+        run: uv sync --frozen --no-install-project --verbose
+
+      - name: Ruff formatting check
+        run: uv run ruff format --check .
+
+      - name: Ruff linting check
+        run: uv run ruff check .
