@@ -2,8 +2,8 @@ import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 
-from src.tests.test_helpers import program_vcr
 from src.main import app
+from src.tests.test_helpers import program_vcr
 
 client = TestClient(app)
 fake = Faker()
@@ -14,8 +14,8 @@ vcr = program_vcr()
     scope="module",
     name="test_cassette",
     params=[
-        "Q4 e-tron",
-        "Q8 e-tron",
+        "q4",  # Q4 e-tron
+        "q8etron",  # Q8 e-tron
     ],
 )
 def _test_cassette(request):
@@ -31,7 +31,12 @@ def _test_cassette(request):
     }
     headers = {"User-Agent": fake.user_agent()}
 
-    cassette_name = f"audi-{vehicle_model.replace(' ', '_')}.yaml"
+    # Map to cassette names which use the old format
+    cassette_map = {
+        "q4": "audi-Q4_e-tron.yaml",
+        "q8etron": "audi-Q8_e-tron.yaml",
+    }
+    cassette_name = cassette_map.get(vehicle_model, f"audi-{vehicle_model}.yaml")
     with vcr.use_cassette(cassette_name):
         r = client.get("/api/inventory/audi", headers=headers, params=params)
 
@@ -56,9 +61,9 @@ def test_audi_inventory_response_has_data(test_cassette):
     """The Audi API response contains the expected data structure"""
     response_data = test_cassette.json()
     assert "data" in response_data, "Response does not contain 'data' key"
-    assert (
-        "getFilteredVehiclesForWormwood" in response_data["data"]
-    ), "Response data does not contain 'getFilteredVehiclesForWormwood' key"
+    assert "getFilteredVehiclesForWormwood" in response_data["data"], (
+        "Response data does not contain 'getFilteredVehiclesForWormwood' key"
+    )
 
 
 def test_audi_inventory_has_filter_results(test_cassette):
@@ -121,9 +126,9 @@ def test_get_vin_detail(test_cassette):
 
     vin_response = vin_data.json()
     assert "data" in vin_response, "VIN response missing 'data' key"
-    assert (
-        "getVehicleInfoForWormwood" in vin_response["data"]
-    ), "VIN response missing 'getVehicleInfoForWormwood' key"
+    assert "getVehicleInfoForWormwood" in vin_response["data"], (
+        "VIN response missing 'getVehicleInfoForWormwood' key"
+    )
 
 
 def test_audi_pagination_single_page():
@@ -132,7 +137,7 @@ def test_audi_pagination_single_page():
         "zip": "99999",  # Remote zip likely to have few results
         "year": "2024",
         "radius": "10",
-        "model": "Q4 e-tron",
+        "model": "q4",  # Q4 e-tron
         "geo": "99999",
     }
     headers = {"User-Agent": fake.user_agent()}
@@ -158,7 +163,7 @@ def test_audi_error_handling_invalid_geo():
         "zip": "90210",
         "year": "2024",
         "radius": "125",
-        "model": "Q4 e-tron",
+        "model": "q4",  # Q4 e-tron
         # Missing geo parameter
     }
     headers = {"User-Agent": fake.user_agent()}
@@ -178,7 +183,7 @@ def test_audi_empty_inventory_results():
         "zip": "00501",  # Remote location
         "year": "2024",
         "radius": "1",  # Very small radius
-        "model": "RS e-tron GT",
+        "model": "rsetrongt",  # RS e-tron GT
         "geo": "00501",
     }
     headers = {"User-Agent": fake.user_agent()}

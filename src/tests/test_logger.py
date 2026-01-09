@@ -1,9 +1,10 @@
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 from fastapi.testclient import TestClient
 
 from src.main import app
-from src.routers.logger import send_error_to_gcp, ErrorMessage
+from src.routers.logger import ErrorMessage, send_error_to_gcp
 
 client = TestClient(app)
 
@@ -18,9 +19,9 @@ def test_accept_application_error_endpoint():
 
     response = client.post("/api/logger/error", json=error_data)
 
-    assert (
-        response.status_code == 202
-    ), f"Expected 202 status, got {response.status_code}"
+    assert response.status_code == 202, (
+        f"Expected 202 status, got {response.status_code}"
+    )
     assert response.json() == {"status": "OK"}
 
 
@@ -65,13 +66,12 @@ def test_accept_application_error_missing_fields():
     assert response.status_code == 422
 
 
-@patch("src.routers.logger.error_reporting")
-def test_send_error_to_gcp_with_error_message_object(mock_error_reporting):
+def test_send_error_to_gcp_with_error_message_object(mock_gcp_error_reporting):
     """Test send_error_to_gcp with ErrorMessage object"""
-    # Setup mock
+    # The mock is provided by the conftest fixture
+    # Setup mock client
     mock_client = Mock()
-    mock_error_reporting.Client.return_value = mock_client
-    mock_error_reporting.HTTPContext = Mock()
+    mock_gcp_error_reporting.Client.return_value = mock_client
 
     # Create ErrorMessage object
     error = ErrorMessage(
@@ -84,22 +84,20 @@ def test_send_error_to_gcp_with_error_message_object(mock_error_reporting):
     send_error_to_gcp(error)
 
     # Verify Client was instantiated with version
-    mock_error_reporting.Client.assert_called_once_with(version="1.0.0")
+    mock_gcp_error_reporting.Client.assert_called_once_with(version="1.0.0")
 
     # Verify HTTPContext was created
-    mock_error_reporting.HTTPContext.assert_called_once()
+    mock_gcp_error_reporting.HTTPContext.assert_called_once()
 
     # Verify report was called
     mock_client.report.assert_called_once()
 
 
-@patch("src.routers.logger.error_reporting")
-def test_send_error_to_gcp_with_string_error(mock_error_reporting):
+def test_send_error_to_gcp_with_string_error(mock_gcp_error_reporting):
     """Test send_error_to_gcp with string error and http_context"""
     # Setup mock
     mock_client = Mock()
-    mock_error_reporting.Client.return_value = mock_client
-    mock_error_reporting.HTTPContext = Mock()
+    mock_gcp_error_reporting.Client.return_value = mock_client
 
     # Call with string error
     http_context = {
@@ -112,10 +110,10 @@ def test_send_error_to_gcp_with_string_error(mock_error_reporting):
     send_error_to_gcp("Test error string", http_context=http_context)
 
     # Verify Client was instantiated without version
-    mock_error_reporting.Client.assert_called_once_with()
+    mock_gcp_error_reporting.Client.assert_called_once_with()
 
     # Verify HTTPContext was created with correct params
-    mock_error_reporting.HTTPContext.assert_called_once_with(
+    mock_gcp_error_reporting.HTTPContext.assert_called_once_with(
         method="GET",
         url="https://example.com/test",
         user_agent="TestAgent/1.0",
@@ -126,14 +124,12 @@ def test_send_error_to_gcp_with_string_error(mock_error_reporting):
     mock_client.report.assert_called_once()
 
 
-@patch("src.routers.logger.error_reporting")
-def test_send_error_to_gcp_handles_exceptions(mock_error_reporting):
+def test_send_error_to_gcp_handles_exceptions(mock_gcp_error_reporting):
     """Test send_error_to_gcp handles exceptions gracefully"""
     # Setup mock to raise exception
     mock_client = Mock()
     mock_client.report.side_effect = Exception("GCP API Error")
-    mock_error_reporting.Client.return_value = mock_client
-    mock_error_reporting.HTTPContext = Mock()
+    mock_gcp_error_reporting.Client.return_value = mock_client
 
     error = ErrorMessage(
         errorMessage="Test error", userAgent="Mozilla/5.0", appVersion="1.0.0"
@@ -146,13 +142,11 @@ def test_send_error_to_gcp_handles_exceptions(mock_error_reporting):
         pytest.fail(f"send_error_to_gcp raised exception: {e}")
 
 
-@patch("src.routers.logger.error_reporting")
-def test_send_error_to_gcp_with_none_http_context(mock_error_reporting):
+def test_send_error_to_gcp_with_none_http_context(mock_gcp_error_reporting):
     """Test send_error_to_gcp with None http_context"""
     # Setup mock
     mock_client = Mock()
-    mock_error_reporting.Client.return_value = mock_client
-    mock_error_reporting.HTTPContext = Mock()
+    mock_gcp_error_reporting.Client.return_value = mock_client
 
     error = ErrorMessage(
         errorMessage="Test error", userAgent="Mozilla/5.0", appVersion="1.0.0"
@@ -206,13 +200,11 @@ def test_accept_application_error_empty_strings():
     assert response.json() == {"status": "OK"}
 
 
-@patch("src.routers.logger.error_reporting")
-def test_send_error_to_gcp_multiple_calls(mock_error_reporting):
+def test_send_error_to_gcp_multiple_calls(mock_gcp_error_reporting):
     """Test multiple calls to send_error_to_gcp"""
     # Setup mock
     mock_client = Mock()
-    mock_error_reporting.Client.return_value = mock_client
-    mock_error_reporting.HTTPContext = Mock()
+    mock_gcp_error_reporting.Client.return_value = mock_client
 
     # Make multiple calls
     for i in range(5):
@@ -222,17 +214,15 @@ def test_send_error_to_gcp_multiple_calls(mock_error_reporting):
         send_error_to_gcp(error)
 
     # Verify Client was called 5 times
-    assert mock_error_reporting.Client.call_count == 5
+    assert mock_gcp_error_reporting.Client.call_count == 5
     assert mock_client.report.call_count == 5
 
 
-@patch("src.routers.logger.error_reporting")
-def test_send_error_to_gcp_with_unicode(mock_error_reporting):
+def test_send_error_to_gcp_with_unicode(mock_gcp_error_reporting):
     """Test error logging with unicode characters"""
     # Setup mock
     mock_client = Mock()
-    mock_error_reporting.Client.return_value = mock_client
-    mock_error_reporting.HTTPContext = Mock()
+    mock_gcp_error_reporting.Client.return_value = mock_client
 
     error = ErrorMessage(
         errorMessage="Error with unicode: 你好 🚗",

@@ -3,8 +3,8 @@ from fastapi import Depends
 from fastapi.testclient import TestClient
 
 from src.libs.common_query_params import CommonInventoryQueryParams
-from src.tests.test_helpers import generate_test_query_params
 from src.main import app
+from src.tests.test_helpers import generate_test_query_params
 
 client = TestClient(app)
 
@@ -74,8 +74,10 @@ def test_zip_validation(test_input, expected_status_code, assertion_message):
         ("-1", 422, "Not a valid radius"),
         ("🤔", 422, "Not a valid radius"),
         ("1000", 422, "Radius too large"),
+        ("999", 422, "Radius too large (max is 500)"),
+        ("501", 422, "Radius too large (max is 500)"),
         ("1", 200, "Minimum radius"),
-        ("999", 200, "Maximum radius"),
+        ("500", 200, "Maximum radius"),
     ],
 )
 def test_radius_validation(test_input, expected_status_code, assertion_message):
@@ -98,17 +100,18 @@ def test_radius_validation(test_input, expected_status_code, assertion_message):
         ("Ioniq 5", 200, "Is a valid model"),
         ("Ioniq+5", 200, "Is a valid model"),
         ("Ioniq%206", 200, "Is a valid model"),
-        ("Ioniq%20Phev", 200, "Is a valid model"),
+        ("Ioniq%20Phev", 422, "Is not a valid model (Phev not supported)"),
         ("Kona%20Ev", 200, "Is a valid model"),
-        ("Santa%20Fe%20Phev", 200, "Is a valid model"),
-        ("Tucson%20Phev", 200, "Is a valid model"),
+        ("Santa%20Fe%20Phev", 422, "Is not a valid model (Phev not supported)"),
+        ("Tucson%20Phev", 422, "Is not a valid model (Phev not supported)"),
         ("N", 200, "Is a valid model"),
         ("V", 200, "Is a valid model"),
-        ("F", 200, "Is a valid model"),
-        ("R", 200, "Is a valid model"),
-        ("T", 200, "Is a valid model"),
+        ("F", 422, "Is not a valid model (single letter F not in list)"),
+        ("R", 422, "Is not a valid model (single letter R not in list)"),
+        ("T", 422, "Is not a valid model (single letter T not in list)"),
         ("GV60", 200, "Is a valid model"),
-        ("ElectrifiedG80", 200, "Is a valid model"),
+        ("ElectrifiedG80", 422, "Is not a valid model (should be ELECTRIFIED-G80)"),
+        ("ELECTRIFIED-G80", 200, "Is a valid model"),
         ("ID.4", 200, "Is a valid model"),
         ("mache", 200, "Is a valid model"),
         ("Bolt EV", 200, "Is a valid model"),

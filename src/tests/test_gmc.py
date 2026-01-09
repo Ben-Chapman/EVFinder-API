@@ -2,8 +2,8 @@ import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 
-from src.tests.test_helpers import program_vcr
 from src.main import app
+from src.tests.test_helpers import program_vcr
 
 client = TestClient(app)
 fake = Faker()
@@ -14,8 +14,8 @@ vcr = program_vcr()
     scope="module",
     name="test_cassette",
     params=[
-        "Sierra EV",
-        "HUMMER EV Pickup",
+        "sierra ev",  # GMC Sierra EV
+        "hummer ev pickup",  # GMC HUMMER EV Pickup
     ],
 )
 def _test_cassette(request):
@@ -29,7 +29,14 @@ def _test_cassette(request):
     }
     headers = {"User-Agent": fake.user_agent()}
 
-    cassette_name = f"gmc-{vehicle_model.replace(' ', '_')}.yaml"
+    # Map to cassette names which use the old format
+    cassette_map = {
+        "sierra ev": "gmc-Sierra_EV.yaml",
+        "hummer ev pickup": "gmc-HUMMER_EV_Pickup.yaml",
+    }
+    cassette_name = cassette_map.get(
+        vehicle_model, f"gmc-{vehicle_model.replace(' ', '_')}.yaml"
+    )
     with vcr.use_cassette(cassette_name):
         r = client.get("/api/inventory/gmc", headers=headers, params=params)
 
@@ -54,12 +61,12 @@ def test_gmc_inventory_response_has_results_count(test_cassette):
     """The GMC API response contains resultsCount field"""
     response_data = test_cassette.json()
 
-    assert (
-        "resultsCount" in response_data
-    ), "Response does not contain 'resultsCount' key"
-    assert isinstance(
-        response_data["resultsCount"], int
-    ), "resultsCount is not an integer"
+    assert "resultsCount" in response_data, (
+        "Response does not contain 'resultsCount' key"
+    )
+    assert isinstance(response_data["resultsCount"], int), (
+        "resultsCount is not an integer"
+    )
 
 
 def test_gmc_inventory_has_vehicles(test_cassette):

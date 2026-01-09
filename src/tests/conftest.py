@@ -1,12 +1,11 @@
 import os
-import sys
 import time
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import vcr
 
-cassette_dir = "tests/cassettes"
+cassette_dir = os.path.join(os.path.dirname(__file__), "cassettes")
 
 
 def program_vcr():

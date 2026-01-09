@@ -1,5 +1,7 @@
+import os
+from unittest.mock import MagicMock, Mock
+
 import vcr
-from unittest.mock import Mock, MagicMock
 
 
 def generate_test_query_params() -> dict:
@@ -13,8 +15,12 @@ def generate_test_query_params() -> dict:
 
 
 def program_vcr():
+    # Use path relative to the project root
+    cassette_library_dir = os.path.join(
+        os.path.dirname(__file__), "..", "..", "tests", "cassettes"
+    )
     _vcr = vcr.VCR(
-        cassette_library_dir="tests/cassettes",
+        cassette_library_dir=cassette_library_dir,
         record_mode="new_episodes",
     )
 

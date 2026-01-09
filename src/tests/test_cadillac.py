@@ -2,8 +2,8 @@ import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 
-from src.tests.test_helpers import program_vcr
 from src.main import app
+from src.tests.test_helpers import program_vcr
 
 client = TestClient(app)
 fake = Faker()
@@ -14,8 +14,8 @@ vcr = program_vcr()
     scope="module",
     name="test_cassette",
     params=[
-        "Lyriq",
-        "Escalade IQ",
+        "lyriq",  # Cadillac Lyriq
+        "escalade iq",  # Cadillac Escalade IQ
     ],
 )
 def _test_cassette(request):
@@ -29,7 +29,14 @@ def _test_cassette(request):
     }
     headers = {"User-Agent": fake.user_agent()}
 
-    cassette_name = f"cadillac-{vehicle_model.replace(' ', '_')}.yaml"
+    # Map to cassette names which use the old format
+    cassette_map = {
+        "lyriq": "cadillac-Lyriq.yaml",
+        "escalade iq": "cadillac-Escalade_IQ.yaml",
+    }
+    cassette_name = cassette_map.get(
+        vehicle_model, f"cadillac-{vehicle_model.replace(' ', '_')}.yaml"
+    )
     with vcr.use_cassette(cassette_name):
         r = client.get("/api/inventory/cadillac", headers=headers, params=params)
 
@@ -70,9 +77,9 @@ def test_cadillac_inventory_has_data(test_cassette):
         pytest.skip("No inventory results for this search")
 
     assert "data" in response_data, "Response does not contain 'data' key"
-    assert (
-        "hits" in response_data["data"]
-    ), "Response data does not contain 'hits' array"
+    assert "hits" in response_data["data"], (
+        "Response data does not contain 'hits' array"
+    )
 
 
 def test_cadillac_inventory_has_count(test_cassette):
@@ -121,7 +128,7 @@ def test_cadillac_pagination_single_page():
         "zip": "99999",  # Remote zip likely to have few results
         "year": "2025",
         "radius": "10",
-        "model": "Lyriq",
+        "model": "lyriq",  # Cadillac Lyriq
     }
     headers = {"User-Agent": fake.user_agent()}
 
@@ -175,9 +182,9 @@ def test_get_vin_detail(test_cassette):
 
     vin_response = vin_data.json()
     assert "data" in vin_response, "VIN response missing 'data' key"
-    assert (
-        vin in vin_response["data"]["id"]
-    ), f"VIN {vin} not found in response ID {vin_response['data']['id']}"
+    assert vin in vin_response["data"]["id"], (
+        f"VIN {vin} not found in response ID {vin_response['data']['id']}"
+    )
 
 
 def test_cadillac_empty_inventory_results():
@@ -186,7 +193,7 @@ def test_cadillac_empty_inventory_results():
         "zip": "00501",  # Remote location
         "year": "2025",
         "radius": "1",  # Very small radius
-        "model": "Lyriq",
+        "model": "lyriq",  # Cadillac Lyriq
     }
     headers = {"User-Agent": fake.user_agent()}
 

@@ -1,11 +1,12 @@
-import pytest
+from unittest.mock import AsyncMock, Mock, patch
+
 import httpx
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+import pytest
 
 from src.libs.http import AsyncHTTPClient
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_http_client_initialization():
     """Test AsyncHTTPClient initialization with default parameters"""
     client = AsyncHTTPClient(base_url="https://example.com", timeout_value=10.0)
@@ -18,7 +19,7 @@ async def test_http_client_initialization():
     await client.close()
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_http_client_context_manager():
     """Test AsyncHTTPClient as context manager"""
     async with AsyncHTTPClient(
@@ -28,7 +29,7 @@ async def test_http_client_context_manager():
         assert client.base_url == "https://example.com"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_http_client_with_http2_disabled():
     """Test AsyncHTTPClient with HTTP/2 disabled"""
     client = AsyncHTTPClient(
@@ -39,7 +40,7 @@ async def test_http_client_with_http2_disabled():
     await client.close()
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_http_client_with_ssl_verification_disabled():
     """Test AsyncHTTPClient with SSL verification disabled"""
     client = AsyncHTTPClient(
@@ -50,7 +51,7 @@ async def test_http_client_with_ssl_verification_disabled():
     await client.close()
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_http_get_single_url_success():
     """Test successful GET request to single URL"""
     mock_response = Mock(spec=httpx.Response)
@@ -70,7 +71,7 @@ async def test_http_get_single_url_success():
             assert result.json() == {"data": "test"}
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_http_get_multiple_urls():
     """Test GET request to multiple URLs concurrently"""
     mock_response = Mock(spec=httpx.Response)
@@ -94,7 +95,7 @@ async def test_http_get_multiple_urls():
             assert len(results) == 2
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_http_post_success():
     """Test successful POST request"""
     mock_response = Mock(spec=httpx.Response)
@@ -113,7 +114,7 @@ async def test_http_post_success():
             assert result.status_code == 200
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @patch("src.routers.logger.send_error_to_gcp")
 async def test_http_timeout_exception(mock_send_error):
     """Test handling of timeout exception"""
@@ -136,7 +137,7 @@ async def test_http_timeout_exception(mock_send_error):
             assert "errorMessage" in result
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @patch("src.routers.logger.send_error_to_gcp")
 async def test_http_network_error(mock_send_error):
     """Test handling of network error"""
@@ -158,7 +159,7 @@ async def test_http_network_error(mock_send_error):
             assert "errorMessage" in result
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @patch("src.routers.logger.send_error_to_gcp")
 async def test_http_decoding_error(mock_send_error):
     """Test handling of decoding error"""
@@ -180,7 +181,7 @@ async def test_http_decoding_error(mock_send_error):
             assert "errorMessage" in result
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @patch("src.routers.logger.send_error_to_gcp")
 async def test_http_too_many_redirects(mock_send_error):
     """Test handling of too many redirects"""
@@ -202,7 +203,7 @@ async def test_http_too_many_redirects(mock_send_error):
             assert "errorMessage" in result
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @patch("src.routers.logger.send_error_to_gcp")
 async def test_http_remote_protocol_error(mock_send_error):
     """Test handling of remote protocol error"""
@@ -224,7 +225,7 @@ async def test_http_remote_protocol_error(mock_send_error):
             assert "errorMessage" in result
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @patch("src.routers.logger.send_error_to_gcp")
 async def test_http_status_error(mock_send_error):
     """Test handling of HTTP status error"""
@@ -251,7 +252,7 @@ async def test_http_status_error(mock_send_error):
             assert "errorMessage" in result
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 @patch("src.routers.logger.send_error_to_gcp")
 async def test_http_request_error(mock_send_error):
     """Test handling of generic request error"""
@@ -273,7 +274,7 @@ async def test_http_request_error(mock_send_error):
             assert "errorMessage" in result
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_http_post_multiple_urls():
     """Test POST request to multiple URLs concurrently"""
     mock_response = Mock(spec=httpx.Response)
@@ -297,7 +298,7 @@ async def test_http_post_multiple_urls():
             assert len(results) == 2
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_http_gather_urls_single():
     """Test gather_urls_for_asyncio with single URL"""
     mock_response = Mock(spec=httpx.Response)
@@ -318,7 +319,7 @@ async def test_http_gather_urls_single():
             assert len(results) == 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_http_timeout_configuration():
     """Test that timeout configuration is properly set"""
     client = AsyncHTTPClient(base_url="https://example.com", timeout_value=30.5)
