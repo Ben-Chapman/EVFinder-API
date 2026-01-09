@@ -9,6 +9,8 @@ steps:
         "us-central1-docker.pkg.dev/${PROJECT_ID}/evfinder-api/evfinder-api:${TAG_NAME}",
         ".",
       ]
+    env:
+      - "DOCKER_BUILDKIT=1"
 
   # Push to Artifact Registry
   - name: "gcr.io/cloud-builders/docker"
