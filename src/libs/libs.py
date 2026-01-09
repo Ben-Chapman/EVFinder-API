@@ -12,7 +12,9 @@ def timeit(function_to_time):
         total_time = end_time - start_time
 
         # TODO: Push this to a custom metric
-        print(f"Function {function_to_time.__name__} took {total_time/1000000:.5f} ms")
+        print(
+            f"Function {function_to_time.__name__} took {total_time / 1000000:.5f} ms"
+        )
 
         return output
 
@@ -29,7 +31,7 @@ def async_timeit(function_to_time):
             total_time = time.perf_counter_ns() - start_time
             # TODO: Push this to a custom metric
             print(
-                f"Function {function_to_time.__name__} took {total_time/1000000:.5f} ms"
+                f"Function {function_to_time.__name__} took {total_time / 1000000:.5f} ms"
             )
 
     return wrapper

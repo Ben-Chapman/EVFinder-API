@@ -2,8 +2,8 @@ import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 
-from tests.test_helpers import program_vcr
 from main import app
+from tests.test_helpers import program_vcr
 
 client = TestClient(app)
 vcr = program_vcr()
@@ -60,23 +60,23 @@ def test_manufacturer_inventory_response_is_json(test_cassette):
 
 def test_manufacturer_inventory_response_is_a_success(test_cassette):
     """The manufacturer API thinks our request was a success"""
-    assert (
-        test_cassette.json()["status"] == "SUCCESS"
-    ), "'SUCCESS' was not found in the manufacturer Inventory response"
+    assert test_cassette.json()["status"] == "SUCCESS", (
+        "'SUCCESS' was not found in the manufacturer Inventory response"
+    )
 
 
 def test_manufacturer_inventory_has_dealers(test_cassette):
     """Dealers with inventory are returned"""
-    assert (
-        len(test_cassette.json()["data"][0]["dealerInfo"]) >= 1
-    ), "API response was a Success but no dealers have inventory"
+    assert len(test_cassette.json()["data"][0]["dealerInfo"]) >= 1, (
+        "API response was a Success but no dealers have inventory"
+    )
 
 
 def test_manufacturer_inventory_dealer_has_inventory(test_cassette):
     """Dealers have inventory"""
-    assert (
-        len(test_cassette.json()["data"][0]["dealerInfo"][0]["vehicles"]) >= 1
-    ), "API response was a Success but no dealers have inventory"
+    assert len(test_cassette.json()["data"][0]["dealerInfo"][0]["vehicles"]) >= 1, (
+        "API response was a Success but no dealers have inventory"
+    )
 
 
 def test_get_vin_detail():

@@ -2,8 +2,8 @@ import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 
-from src.tests.test_helpers import program_vcr
 from src.main import app
+from src.tests.test_helpers import program_vcr
 
 client = TestClient(app)
 fake = Faker()
@@ -53,9 +53,9 @@ def test_bmw_inventory_response_has_data(test_cassette):
     """The BMW API response contains the expected data structure"""
     response_data = test_cassette.json()
     assert "data" in response_data, "Response does not contain 'data' key"
-    assert (
-        "getInventory" in response_data["data"]
-    ), "Response data does not contain 'getInventory' key"
+    assert "getInventory" in response_data["data"], (
+        "Response data does not contain 'getInventory' key"
+    )
 
 
 def test_bmw_inventory_has_filter_data(test_cassette):
@@ -63,12 +63,12 @@ def test_bmw_inventory_has_filter_data(test_cassette):
     response_data = test_cassette.json()
     inventory = response_data["data"]["getInventory"]
 
-    assert (
-        "numberOfFilteredVehicles" in inventory
-    ), "getInventory does not contain 'numberOfFilteredVehicles'"
-    assert isinstance(
-        inventory["numberOfFilteredVehicles"], int
-    ), "numberOfFilteredVehicles is not an integer"
+    assert "numberOfFilteredVehicles" in inventory, (
+        "getInventory does not contain 'numberOfFilteredVehicles'"
+    )
+    assert isinstance(inventory["numberOfFilteredVehicles"], int), (
+        "numberOfFilteredVehicles is not an integer"
+    )
 
 
 def test_bmw_inventory_has_result(test_cassette):
@@ -151,16 +151,16 @@ def test_get_vin_detail(test_cassette):
 
     vin_response = vin_data.json()
     assert "data" in vin_response, "VIN response missing 'data' key"
-    assert (
-        "getInventoryByIdentifier" in vin_response["data"]
-    ), "VIN response missing 'getInventoryByIdentifier' key"
+    assert "getInventoryByIdentifier" in vin_response["data"], (
+        "VIN response missing 'getInventoryByIdentifier' key"
+    )
 
     # Verify VIN matches
     vin_result = vin_response["data"]["getInventoryByIdentifier"]["result"]
     if len(vin_result) > 0:
-        assert (
-            vin_result[0]["vin"] == vin
-        ), f"VIN mismatch: expected {vin}, got {vin_result[0]['vin']}"
+        assert vin_result[0]["vin"] == vin, (
+            f"VIN mismatch: expected {vin}, got {vin_result[0]['vin']}"
+        )
 
 
 def test_bmw_large_page_size():

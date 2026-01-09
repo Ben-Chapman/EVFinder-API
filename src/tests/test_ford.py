@@ -2,8 +2,8 @@ import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 
-from src.tests.test_helpers import program_vcr
 from src.main import app
+from src.tests.test_helpers import program_vcr
 
 client = TestClient(app)
 fake = Faker()
@@ -69,9 +69,9 @@ def test_ford_inventory_has_data(test_cassette):
     if response_data["data"]["filterResults"] == []:
         pytest.skip("No inventory results for this search")
 
-    assert (
-        "filterResults" in response_data["data"]
-    ), "Response data does not contain 'filterResults'"
+    assert "filterResults" in response_data["data"], (
+        "Response data does not contain 'filterResults'"
+    )
 
 
 def test_ford_inventory_has_total_count(test_cassette):
@@ -84,9 +84,9 @@ def test_ford_inventory_has_total_count(test_cassette):
 
     filter_results = response_data["data"]["filterResults"]
     assert "ExactMatch" in filter_results, "filterResults missing 'ExactMatch' key"
-    assert (
-        "totalCount" in filter_results["ExactMatch"]
-    ), "ExactMatch missing 'totalCount'"
+    assert "totalCount" in filter_results["ExactMatch"], (
+        "ExactMatch missing 'totalCount'"
+    )
 
 
 def test_ford_inventory_has_vehicles(test_cassette):
@@ -138,9 +138,9 @@ def test_ford_pagination_data(test_cassette):
 
     # If totalCount > 12, should have pagination data
     if total_count > 12:
-        assert (
-            "rdata" in response_data
-        ), "Response missing 'rdata' for paginated results"
+        assert "rdata" in response_data, (
+            "Response missing 'rdata' for paginated results"
+        )
         assert "vehicles" in response_data["rdata"], "rdata missing 'vehicles' array"
         assert "dealers" in response_data["rdata"], "rdata missing 'dealers' array"
 
