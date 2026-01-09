@@ -3,10 +3,10 @@ FROM python:3.10-slim
 ENV API_HOME /api
 WORKDIR $API_HOME
 
-COPY requirements.txt .
+COPY uv.lock .
 COPY src $API_HOME/src
 
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN uv sync
 
 CMD [ \
   "uvicorn", \
