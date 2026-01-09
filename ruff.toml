@@ -1,0 +1,25 @@
+# Source: https://docs.astral.sh/ruff/settings/
+
+# Additional directories to exclude from Ruff linting and formatting
+exclude = []
+
+line-length  = 88
+indent-width = 4
+
+[lint]
+  # Sort imports
+  extend-select = ["I"]
+
+  # Allow fix for all enabled rules (when `--fix`) is provided.
+  fixable   = ["ALL"]
+  unfixable = []
+
+[format]
+  quote-style  = "double"
+  indent-style = "space"
+
+  # Respect magic trailing commas.
+  skip-magic-trailing-comma = false
+
+  # Line endings will be converted to \n. The default line ending on Unix.
+  line-ending = "lf"
