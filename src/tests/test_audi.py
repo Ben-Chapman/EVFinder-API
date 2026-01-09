@@ -55,25 +55,21 @@ def test_audi_inventory_response_is_json(test_cassette):
 def test_audi_inventory_response_has_data(test_cassette):
     """The Audi API response contains the expected data structure"""
     response_data = test_cassette.json()
-    assert "data" in response_data, (
-        "Response does not contain 'data' key"
-    )
-    assert "getFilteredVehiclesForWormwood" in response_data["data"], (
-        "Response data does not contain 'getFilteredVehiclesForWormwood' key"
-    )
+    assert "data" in response_data, "Response does not contain 'data' key"
+    assert (
+        "getFilteredVehiclesForWormwood" in response_data["data"]
+    ), "Response data does not contain 'getFilteredVehiclesForWormwood' key"
 
 
 def test_audi_inventory_has_filter_results(test_cassette):
     """Audi response includes filterResults with totalCount"""
     response_data = test_cassette.json()
-    filter_results = response_data["data"]["getFilteredVehiclesForWormwood"]["filterResults"]
+    filter_results = response_data["data"]["getFilteredVehiclesForWormwood"][
+        "filterResults"
+    ]
 
-    assert "totalCount" in filter_results, (
-        "filterResults does not contain 'totalCount'"
-    )
-    assert isinstance(filter_results["totalCount"], int), (
-        "totalCount is not an integer"
-    )
+    assert "totalCount" in filter_results, "filterResults does not contain 'totalCount'"
+    assert isinstance(filter_results["totalCount"], int), "totalCount is not an integer"
 
 
 def test_audi_inventory_has_vehicles(test_cassette):
@@ -125,9 +121,9 @@ def test_get_vin_detail(test_cassette):
 
     vin_response = vin_data.json()
     assert "data" in vin_response, "VIN response missing 'data' key"
-    assert "getVehicleInfoForWormwood" in vin_response["data"], (
-        "VIN response missing 'getVehicleInfoForWormwood' key"
-    )
+    assert (
+        "getVehicleInfoForWormwood" in vin_response["data"]
+    ), "VIN response missing 'getVehicleInfoForWormwood' key"
 
 
 def test_audi_pagination_single_page():
@@ -148,7 +144,9 @@ def test_audi_pagination_single_page():
     assert r.status_code == 200
     response_data = r.json()
     vehicles = response_data["data"]["getFilteredVehiclesForWormwood"]["vehicles"]
-    total_count = response_data["data"]["getFilteredVehiclesForWormwood"]["filterResults"]["totalCount"]
+    total_count = response_data["data"]["getFilteredVehiclesForWormwood"][
+        "filterResults"
+    ]["totalCount"]
 
     # Verify we don't have pagination artifacts
     assert len(vehicles) <= 24 or len(vehicles) == total_count

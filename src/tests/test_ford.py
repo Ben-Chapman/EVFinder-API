@@ -54,32 +54,24 @@ def test_ford_inventory_response_has_dealer_slug(test_cassette):
     """Ford API adds dealerSlug to the response"""
     response_data = test_cassette.json()
 
-    assert "dealerSlug" in response_data, (
-        "Response does not contain 'dealerSlug' key"
-    )
-    assert isinstance(response_data["dealerSlug"], str), (
-        "dealerSlug is not a string"
-    )
-    assert len(response_data["dealerSlug"]) > 0, (
-        "dealerSlug is empty"
-    )
+    assert "dealerSlug" in response_data, "Response does not contain 'dealerSlug' key"
+    assert isinstance(response_data["dealerSlug"], str), "dealerSlug is not a string"
+    assert len(response_data["dealerSlug"]) > 0, "dealerSlug is empty"
 
 
 def test_ford_inventory_has_data(test_cassette):
     """Ford response includes data with filterResults"""
     response_data = test_cassette.json()
 
-    assert "data" in response_data, (
-        "Response does not contain 'data' key"
-    )
+    assert "data" in response_data, "Response does not contain 'data' key"
 
     # Empty filterResults is valid for no inventory
     if response_data["data"]["filterResults"] == []:
         pytest.skip("No inventory results for this search")
 
-    assert "filterResults" in response_data["data"], (
-        "Response data does not contain 'filterResults'"
-    )
+    assert (
+        "filterResults" in response_data["data"]
+    ), "Response data does not contain 'filterResults'"
 
 
 def test_ford_inventory_has_total_count(test_cassette):
@@ -91,12 +83,10 @@ def test_ford_inventory_has_total_count(test_cassette):
         pytest.skip("No inventory results for this search")
 
     filter_results = response_data["data"]["filterResults"]
-    assert "ExactMatch" in filter_results, (
-        "filterResults missing 'ExactMatch' key"
-    )
-    assert "totalCount" in filter_results["ExactMatch"], (
-        "ExactMatch missing 'totalCount'"
-    )
+    assert "ExactMatch" in filter_results, "filterResults missing 'ExactMatch' key"
+    assert (
+        "totalCount" in filter_results["ExactMatch"]
+    ), "ExactMatch missing 'totalCount'"
 
 
 def test_ford_inventory_has_vehicles(test_cassette):
@@ -148,15 +138,11 @@ def test_ford_pagination_data(test_cassette):
 
     # If totalCount > 12, should have pagination data
     if total_count > 12:
-        assert "rdata" in response_data, (
-            "Response missing 'rdata' for paginated results"
-        )
-        assert "vehicles" in response_data["rdata"], (
-            "rdata missing 'vehicles' array"
-        )
-        assert "dealers" in response_data["rdata"], (
-            "rdata missing 'dealers' array"
-        )
+        assert (
+            "rdata" in response_data
+        ), "Response missing 'rdata' for paginated results"
+        assert "vehicles" in response_data["rdata"], "rdata missing 'vehicles' array"
+        assert "dealers" in response_data["rdata"], "rdata missing 'dealers' array"
 
 
 def test_ford_pagination_large_result_set():

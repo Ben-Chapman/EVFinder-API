@@ -52,12 +52,10 @@ def test_bmw_inventory_response_is_json(test_cassette):
 def test_bmw_inventory_response_has_data(test_cassette):
     """The BMW API response contains the expected data structure"""
     response_data = test_cassette.json()
-    assert "data" in response_data, (
-        "Response does not contain 'data' key"
-    )
-    assert "getInventory" in response_data["data"], (
-        "Response data does not contain 'getInventory' key"
-    )
+    assert "data" in response_data, "Response does not contain 'data' key"
+    assert (
+        "getInventory" in response_data["data"]
+    ), "Response data does not contain 'getInventory' key"
 
 
 def test_bmw_inventory_has_filter_data(test_cassette):
@@ -65,12 +63,12 @@ def test_bmw_inventory_has_filter_data(test_cassette):
     response_data = test_cassette.json()
     inventory = response_data["data"]["getInventory"]
 
-    assert "numberOfFilteredVehicles" in inventory, (
-        "getInventory does not contain 'numberOfFilteredVehicles'"
-    )
-    assert isinstance(inventory["numberOfFilteredVehicles"], int), (
-        "numberOfFilteredVehicles is not an integer"
-    )
+    assert (
+        "numberOfFilteredVehicles" in inventory
+    ), "getInventory does not contain 'numberOfFilteredVehicles'"
+    assert isinstance(
+        inventory["numberOfFilteredVehicles"], int
+    ), "numberOfFilteredVehicles is not an integer"
 
 
 def test_bmw_inventory_has_result(test_cassette):
@@ -89,14 +87,7 @@ def test_bmw_inventory_vehicle_structure(test_cassette):
 
     if len(result) > 0:
         vehicle = result[0]
-        required_keys = [
-            "name",
-            "modelYear",
-            "vin",
-            "code",
-            "totalMsrp",
-            "orderStatus"
-        ]
+        required_keys = ["name", "modelYear", "vin", "code", "totalMsrp", "orderStatus"]
 
         for key in required_keys:
             assert key in vehicle, f"Vehicle missing required key: {key}"
@@ -110,9 +101,7 @@ def test_bmw_inventory_has_dealer_info(test_cassette):
     assert isinstance(dealer_info, list), "dealerInfo is not a list"
     if len(dealer_info) > 0:
         dealer = dealer_info[0]
-        assert "newVehicleSales" in dealer, (
-            "dealerInfo missing 'newVehicleSales'"
-        )
+        assert "newVehicleSales" in dealer, "dealerInfo missing 'newVehicleSales'"
 
 
 def test_bmw_order_status_codes(test_cassette):
@@ -125,9 +114,14 @@ def test_bmw_order_status_codes(test_cassette):
             if "orderStatus" in vehicle:
                 status = vehicle["orderStatus"]
                 # Status codes: 0-1 at dealer, 2-5 in transit/production
-                assert status in ["0", "1", "2", "3", "4", "5"], (
-                    f"Invalid order status: {status}"
-                )
+                assert status in [
+                    "0",
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                ], f"Invalid order status: {status}"
 
 
 def test_get_vin_detail(test_cassette):
@@ -157,16 +151,16 @@ def test_get_vin_detail(test_cassette):
 
     vin_response = vin_data.json()
     assert "data" in vin_response, "VIN response missing 'data' key"
-    assert "getInventoryByIdentifier" in vin_response["data"], (
-        "VIN response missing 'getInventoryByIdentifier' key"
-    )
+    assert (
+        "getInventoryByIdentifier" in vin_response["data"]
+    ), "VIN response missing 'getInventoryByIdentifier' key"
 
     # Verify VIN matches
     vin_result = vin_response["data"]["getInventoryByIdentifier"]["result"]
     if len(vin_result) > 0:
-        assert vin_result[0]["vin"] == vin, (
-            f"VIN mismatch: expected {vin}, got {vin_result[0]['vin']}"
-        )
+        assert (
+            vin_result[0]["vin"] == vin
+        ), f"VIN mismatch: expected {vin}, got {vin_result[0]['vin']}"
 
 
 def test_bmw_large_page_size():

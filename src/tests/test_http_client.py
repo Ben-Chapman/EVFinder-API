@@ -8,10 +8,7 @@ from src.libs.http import AsyncHTTPClient
 @pytest.mark.asyncio
 async def test_http_client_initialization():
     """Test AsyncHTTPClient initialization with default parameters"""
-    client = AsyncHTTPClient(
-        base_url="https://example.com",
-        timeout_value=10.0
-    )
+    client = AsyncHTTPClient(base_url="https://example.com", timeout_value=10.0)
 
     assert client.base_url == "https://example.com"
     assert client.timeout_value == 10.0
@@ -25,8 +22,7 @@ async def test_http_client_initialization():
 async def test_http_client_context_manager():
     """Test AsyncHTTPClient as context manager"""
     async with AsyncHTTPClient(
-        base_url="https://example.com",
-        timeout_value=10.0
+        base_url="https://example.com", timeout_value=10.0
     ) as client:
         assert client.client is not None
         assert client.base_url == "https://example.com"
@@ -36,9 +32,7 @@ async def test_http_client_context_manager():
 async def test_http_client_with_http2_disabled():
     """Test AsyncHTTPClient with HTTP/2 disabled"""
     client = AsyncHTTPClient(
-        base_url="https://example.com",
-        timeout_value=10.0,
-        use_http2=False
+        base_url="https://example.com", timeout_value=10.0, use_http2=False
     )
 
     assert client.client is not None
@@ -49,9 +43,7 @@ async def test_http_client_with_http2_disabled():
 async def test_http_client_with_ssl_verification_disabled():
     """Test AsyncHTTPClient with SSL verification disabled"""
     client = AsyncHTTPClient(
-        base_url="https://example.com",
-        timeout_value=10.0,
-        verify=False
+        base_url="https://example.com", timeout_value=10.0, verify=False
     )
 
     assert client.verify is False
@@ -66,14 +58,10 @@ async def test_http_get_single_url_success():
     mock_response.json.return_value = {"data": "test"}
 
     with patch.object(
-        httpx.AsyncClient,
-        'get',
-        new_callable=AsyncMock,
-        return_value=mock_response
+        httpx.AsyncClient, "get", new_callable=AsyncMock, return_value=mock_response
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             mock_response.raise_for_status = Mock()
             result = await client.get("/test", headers={}, params={})
@@ -89,14 +77,10 @@ async def test_http_get_multiple_urls():
     mock_response.status_code = 200
 
     with patch.object(
-        httpx.AsyncClient,
-        'get',
-        new_callable=AsyncMock,
-        return_value=mock_response
+        httpx.AsyncClient, "get", new_callable=AsyncMock, return_value=mock_response
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             mock_response.raise_for_status = Mock()
 
@@ -118,21 +102,13 @@ async def test_http_post_success():
     mock_response.json.return_value = {"data": "posted"}
 
     with patch.object(
-        httpx.AsyncClient,
-        'post',
-        new_callable=AsyncMock,
-        return_value=mock_response
+        httpx.AsyncClient, "post", new_callable=AsyncMock, return_value=mock_response
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             mock_response.raise_for_status = Mock()
-            result = await client.post(
-                "/test",
-                headers={},
-                post_data={"key": "value"}
-            )
+            result = await client.post("/test", headers={}, post_data={"key": "value"})
 
             assert result.status_code == 200
 
@@ -148,14 +124,10 @@ async def test_http_timeout_exception(mock_send_error):
     timeout_error = httpx.TimeoutException("Timeout", request=mock_request)
 
     with patch.object(
-        httpx.AsyncClient,
-        'get',
-        new_callable=AsyncMock,
-        side_effect=timeout_error
+        httpx.AsyncClient, "get", new_callable=AsyncMock, side_effect=timeout_error
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             result = await client.get("/test", headers={"User-Agent": "Test"})
 
@@ -175,14 +147,10 @@ async def test_http_network_error(mock_send_error):
     network_error = httpx.NetworkError("Network error", request=mock_request)
 
     with patch.object(
-        httpx.AsyncClient,
-        'get',
-        new_callable=AsyncMock,
-        side_effect=network_error
+        httpx.AsyncClient, "get", new_callable=AsyncMock, side_effect=network_error
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             result = await client.get("/test", headers={"User-Agent": "Test"})
 
@@ -201,14 +169,10 @@ async def test_http_decoding_error(mock_send_error):
     decoding_error = httpx.DecodingError("Decoding failed", request=mock_request)
 
     with patch.object(
-        httpx.AsyncClient,
-        'get',
-        new_callable=AsyncMock,
-        side_effect=decoding_error
+        httpx.AsyncClient, "get", new_callable=AsyncMock, side_effect=decoding_error
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             result = await client.get("/test", headers={"User-Agent": "Test"})
 
@@ -227,14 +191,10 @@ async def test_http_too_many_redirects(mock_send_error):
     redirect_error = httpx.TooManyRedirects("Too many redirects", request=mock_request)
 
     with patch.object(
-        httpx.AsyncClient,
-        'get',
-        new_callable=AsyncMock,
-        side_effect=redirect_error
+        httpx.AsyncClient, "get", new_callable=AsyncMock, side_effect=redirect_error
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             result = await client.get("/test", headers={"User-Agent": "Test"})
 
@@ -250,20 +210,13 @@ async def test_http_remote_protocol_error(mock_send_error):
     mock_request.url = "https://example.com/test"
     mock_request.method = "GET"
 
-    protocol_error = httpx.RemoteProtocolError(
-        "Protocol error",
-        request=mock_request
-    )
+    protocol_error = httpx.RemoteProtocolError("Protocol error", request=mock_request)
 
     with patch.object(
-        httpx.AsyncClient,
-        'get',
-        new_callable=AsyncMock,
-        side_effect=protocol_error
+        httpx.AsyncClient, "get", new_callable=AsyncMock, side_effect=protocol_error
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             result = await client.get("/test", headers={"User-Agent": "Test"})
 
@@ -283,20 +236,14 @@ async def test_http_status_error(mock_send_error):
     mock_response.status_code = 500
 
     status_error = httpx.HTTPStatusError(
-        "Server error",
-        request=mock_request,
-        response=mock_response
+        "Server error", request=mock_request, response=mock_response
     )
 
     with patch.object(
-        httpx.AsyncClient,
-        'get',
-        new_callable=AsyncMock,
-        side_effect=status_error
+        httpx.AsyncClient, "get", new_callable=AsyncMock, side_effect=status_error
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             result = await client.get("/test", headers={"User-Agent": "Test"})
 
@@ -315,14 +262,10 @@ async def test_http_request_error(mock_send_error):
     request_error = httpx.RequestError("Request failed", request=mock_request)
 
     with patch.object(
-        httpx.AsyncClient,
-        'get',
-        new_callable=AsyncMock,
-        side_effect=request_error
+        httpx.AsyncClient, "get", new_callable=AsyncMock, side_effect=request_error
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             result = await client.get("/test", headers={"User-Agent": "Test"})
 
@@ -337,14 +280,10 @@ async def test_http_post_multiple_urls():
     mock_response.status_code = 200
 
     with patch.object(
-        httpx.AsyncClient,
-        'post',
-        new_callable=AsyncMock,
-        return_value=mock_response
+        httpx.AsyncClient, "post", new_callable=AsyncMock, return_value=mock_response
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             mock_response.raise_for_status = Mock()
 
@@ -365,21 +304,14 @@ async def test_http_gather_urls_single():
     mock_response.status_code = 200
 
     with patch.object(
-        httpx.AsyncClient,
-        'get',
-        new_callable=AsyncMock,
-        return_value=mock_response
+        httpx.AsyncClient, "get", new_callable=AsyncMock, return_value=mock_response
     ):
         async with AsyncHTTPClient(
-            base_url="https://example.com",
-            timeout_value=10.0
+            base_url="https://example.com", timeout_value=10.0
         ) as client:
             mock_response.raise_for_status = Mock()
             results = await client.gather_urls_for_asyncio(
-                uri="/test",
-                headers={},
-                params={},
-                method="get"
+                uri="/test", headers={}, params={}, method="get"
             )
 
             assert isinstance(results, list)
@@ -389,10 +321,7 @@ async def test_http_gather_urls_single():
 @pytest.mark.asyncio
 async def test_http_timeout_configuration():
     """Test that timeout configuration is properly set"""
-    client = AsyncHTTPClient(
-        base_url="https://example.com",
-        timeout_value=30.5
-    )
+    client = AsyncHTTPClient(base_url="https://example.com", timeout_value=30.5)
 
     # Verify the client has timeout configured
     assert client.timeout_value == 30.5

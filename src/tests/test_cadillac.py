@@ -58,9 +58,7 @@ def test_cadillac_inventory_response_has_status(test_cassette):
     if response_data == {}:
         pytest.skip("No inventory results for this search")
 
-    assert "status" in response_data, (
-        "Response does not contain 'status' key"
-    )
+    assert "status" in response_data, "Response does not contain 'status' key"
 
 
 def test_cadillac_inventory_has_data(test_cassette):
@@ -71,12 +69,10 @@ def test_cadillac_inventory_has_data(test_cassette):
     if response_data == {}:
         pytest.skip("No inventory results for this search")
 
-    assert "data" in response_data, (
-        "Response does not contain 'data' key"
-    )
-    assert "hits" in response_data["data"], (
-        "Response data does not contain 'hits' array"
-    )
+    assert "data" in response_data, "Response does not contain 'data' key"
+    assert (
+        "hits" in response_data["data"]
+    ), "Response data does not contain 'hits' array"
 
 
 def test_cadillac_inventory_has_count(test_cassette):
@@ -87,12 +83,8 @@ def test_cadillac_inventory_has_count(test_cassette):
     if response_data == {}:
         pytest.skip("No inventory results for this search")
 
-    assert "count" in response_data["data"], (
-        "Response data does not contain 'count'"
-    )
-    assert isinstance(response_data["data"]["count"], int), (
-        "count is not an integer"
-    )
+    assert "count" in response_data["data"], "Response data does not contain 'count'"
+    assert isinstance(response_data["data"]["count"], int), "count is not an integer"
 
 
 def test_cadillac_inventory_vehicle_structure(test_cassette):
@@ -106,14 +98,7 @@ def test_cadillac_inventory_vehicle_structure(test_cassette):
     hits = response_data["data"]["hits"]
     vehicle = hits[0]
 
-    required_keys = [
-        "id",
-        "make",
-        "model",
-        "year",
-        "type",
-        "dealer"
-    ]
+    required_keys = ["id", "make", "model", "year", "type", "dealer"]
 
     for key in required_keys:
         assert key in vehicle, f"Vehicle missing required key: {key}"
@@ -127,9 +112,7 @@ def test_cadillac_inventory_has_facets(test_cassette):
     if response_data == {}:
         pytest.skip("No inventory results for this search")
 
-    assert "facets" in response_data, (
-        "Response does not contain 'facets' key"
-    )
+    assert "facets" in response_data, "Response does not contain 'facets' key"
 
 
 def test_cadillac_pagination_single_page():
@@ -192,9 +175,9 @@ def test_get_vin_detail(test_cassette):
 
     vin_response = vin_data.json()
     assert "data" in vin_response, "VIN response missing 'data' key"
-    assert vin in vin_response["data"]["id"], (
-        f"VIN {vin} not found in response ID {vin_response['data']['id']}"
-    )
+    assert (
+        vin in vin_response["data"]["id"]
+    ), f"VIN {vin} not found in response ID {vin_response['data']['id']}"
 
 
 def test_cadillac_empty_inventory_results():

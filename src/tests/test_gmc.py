@@ -54,24 +54,20 @@ def test_gmc_inventory_response_has_results_count(test_cassette):
     """The GMC API response contains resultsCount field"""
     response_data = test_cassette.json()
 
-    assert "resultsCount" in response_data, (
-        "Response does not contain 'resultsCount' key"
-    )
-    assert isinstance(response_data["resultsCount"], int), (
-        "resultsCount is not an integer"
-    )
+    assert (
+        "resultsCount" in response_data
+    ), "Response does not contain 'resultsCount' key"
+    assert isinstance(
+        response_data["resultsCount"], int
+    ), "resultsCount is not an integer"
 
 
 def test_gmc_inventory_has_vehicles(test_cassette):
     """GMC response includes vehicles array"""
     response_data = test_cassette.json()
 
-    assert "vehicles" in response_data, (
-        "Response does not contain 'vehicles' key"
-    )
-    assert isinstance(response_data["vehicles"], list), (
-        "vehicles is not a list"
-    )
+    assert "vehicles" in response_data, "Response does not contain 'vehicles' key"
+    assert isinstance(response_data["vehicles"], list), "vehicles is not a list"
 
 
 def test_gmc_inventory_vehicle_structure(test_cassette):
@@ -171,9 +167,7 @@ def test_get_vin_detail(test_cassette):
 
     vin_response = vin_data.json()
     assert "vin" in vin_response, "VIN response missing 'vin' key"
-    assert vin in vin_response["vin"], (
-        f"VIN {vin} not found in response"
-    )
+    assert vin in vin_response["vin"], f"VIN {vin} not found in response"
 
 
 def test_gmc_empty_inventory_results():

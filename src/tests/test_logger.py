@@ -13,14 +13,14 @@ def test_accept_application_error_endpoint():
     error_data = {
         "errorMessage": "Test error message",
         "userAgent": "Mozilla/5.0 Test Browser",
-        "appVersion": "1.0.0"
+        "appVersion": "1.0.0",
     }
 
     response = client.post("/api/logger/error", json=error_data)
 
-    assert response.status_code == 202, (
-        f"Expected 202 status, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 202
+    ), f"Expected 202 status, got {response.status_code}"
     assert response.json() == {"status": "OK"}
 
 
@@ -29,7 +29,7 @@ def test_accept_application_error_with_special_characters():
     error_data = {
         "errorMessage": "Error with special chars: <>&\"'",
         "userAgent": "Test/1.0",
-        "appVersion": "2.0.0"
+        "appVersion": "2.0.0",
     }
 
     response = client.post("/api/logger/error", json=error_data)
@@ -43,7 +43,7 @@ def test_accept_application_error_with_long_message():
     error_data = {
         "errorMessage": "x" * 10000,  # Very long error message
         "userAgent": "Test/1.0",
-        "appVersion": "1.0.0"
+        "appVersion": "1.0.0",
     }
 
     response = client.post("/api/logger/error", json=error_data)
@@ -77,7 +77,7 @@ def test_send_error_to_gcp_with_error_message_object(mock_error_reporting):
     error = ErrorMessage(
         errorMessage="Test error from frontend",
         userAgent="Mozilla/5.0",
-        appVersion="1.0.0"
+        appVersion="1.0.0",
     )
 
     # Call the function
@@ -106,7 +106,7 @@ def test_send_error_to_gcp_with_string_error(mock_error_reporting):
         "method": "GET",
         "url": "https://example.com/test",
         "user_agent": "TestAgent/1.0",
-        "status_code": "500"
+        "status_code": "500",
     }
 
     send_error_to_gcp("Test error string", http_context=http_context)
@@ -119,7 +119,7 @@ def test_send_error_to_gcp_with_string_error(mock_error_reporting):
         method="GET",
         url="https://example.com/test",
         user_agent="TestAgent/1.0",
-        response_status_code="500"
+        response_status_code="500",
     )
 
     # Verify report was called
@@ -136,9 +136,7 @@ def test_send_error_to_gcp_handles_exceptions(mock_error_reporting):
     mock_error_reporting.HTTPContext = Mock()
 
     error = ErrorMessage(
-        errorMessage="Test error",
-        userAgent="Mozilla/5.0",
-        appVersion="1.0.0"
+        errorMessage="Test error", userAgent="Mozilla/5.0", appVersion="1.0.0"
     )
 
     # Should not raise exception
@@ -157,9 +155,7 @@ def test_send_error_to_gcp_with_none_http_context(mock_error_reporting):
     mock_error_reporting.HTTPContext = Mock()
 
     error = ErrorMessage(
-        errorMessage="Test error",
-        userAgent="Mozilla/5.0",
-        appVersion="1.0.0"
+        errorMessage="Test error", userAgent="Mozilla/5.0", appVersion="1.0.0"
     )
 
     # Should handle None http_context
@@ -173,9 +169,7 @@ def test_error_message_model_validation():
     """Test ErrorMessage Pydantic model validation"""
     # Valid error message
     error = ErrorMessage(
-        errorMessage="Test",
-        userAgent="Mozilla/5.0",
-        appVersion="1.0.0"
+        errorMessage="Test", userAgent="Mozilla/5.0", appVersion="1.0.0"
     )
 
     assert error.errorMessage == "Test"
@@ -194,7 +188,7 @@ def test_accept_application_error_invalid_json():
     response = client.post(
         "/api/logger/error",
         data="not valid json",
-        headers={"Content-Type": "application/json"}
+        headers={"Content-Type": "application/json"},
     )
 
     # Should return 422 validation error
@@ -203,11 +197,7 @@ def test_accept_application_error_invalid_json():
 
 def test_accept_application_error_empty_strings():
     """Test error logging with empty strings"""
-    error_data = {
-        "errorMessage": "",
-        "userAgent": "",
-        "appVersion": ""
-    }
+    error_data = {"errorMessage": "", "userAgent": "", "appVersion": ""}
 
     response = client.post("/api/logger/error", json=error_data)
 
@@ -227,9 +217,7 @@ def test_send_error_to_gcp_multiple_calls(mock_error_reporting):
     # Make multiple calls
     for i in range(5):
         error = ErrorMessage(
-            errorMessage=f"Error {i}",
-            userAgent="Test",
-            appVersion="1.0"
+            errorMessage=f"Error {i}", userAgent="Test", appVersion="1.0"
         )
         send_error_to_gcp(error)
 
@@ -249,7 +237,7 @@ def test_send_error_to_gcp_with_unicode(mock_error_reporting):
     error = ErrorMessage(
         errorMessage="Error with unicode: 你好 🚗",
         userAgent="Mozilla/5.0",
-        appVersion="1.0.0"
+        appVersion="1.0.0",
     )
 
     send_error_to_gcp(error)

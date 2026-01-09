@@ -51,7 +51,12 @@ class TestQueryParamValidation:
 
     def test_invalid_model_name(self):
         """Test invalid model name"""
-        params = {"zip": "90210", "year": "2024", "radius": "125", "model": "InvalidModel"}
+        params = {
+            "zip": "90210",
+            "year": "2024",
+            "radius": "125",
+            "model": "InvalidModel",
+        }
         response = client.get("/api/inventory/hyundai", params=params)
         assert response.status_code == 422
 
@@ -171,8 +176,8 @@ class TestCORSAndHeaders:
             "/api/inventory/hyundai",
             headers={
                 "Origin": "https://theevfinder.com",
-                "Access-Control-Request-Method": "GET"
-            }
+                "Access-Control-Request-Method": "GET",
+            },
         )
         # FastAPI TestClient might not handle OPTIONS the same as real server
         assert response.status_code in [200, 405]
@@ -184,7 +189,9 @@ class TestCORSAndHeaders:
 
         cassette_name = "cors-test-hyundai.yaml"
         with vcr.use_cassette(cassette_name):
-            response = client.get("/api/inventory/hyundai", params=params, headers=headers)
+            response = client.get(
+                "/api/inventory/hyundai", params=params, headers=headers
+            )
 
         assert response.status_code == 200
 
@@ -198,7 +205,7 @@ class TestSpecialCases:
             "zip": "90210",
             "year": "2024",
             "radius": "125",
-            "model": "Ioniq%205"  # URL encoded
+            "model": "Ioniq%205",  # URL encoded
         }
 
         cassette_name = "url-encoded-model.yaml"
@@ -213,7 +220,7 @@ class TestSpecialCases:
             "zip": "00501",  # Leading zeros
             "year": "2024",
             "radius": "125",
-            "model": "Ioniq 5"
+            "model": "Ioniq 5",
         }
 
         cassette_name = "leading-zeros-zip.yaml"
@@ -224,12 +231,7 @@ class TestSpecialCases:
 
     def test_boundary_zip_minimum(self):
         """Test minimum valid ZIP code"""
-        params = {
-            "zip": "501",
-            "year": "2024",
-            "radius": "125",
-            "model": "Ioniq 5"
-        }
+        params = {"zip": "501", "year": "2024", "radius": "125", "model": "Ioniq 5"}
 
         cassette_name = "boundary-zip-min.yaml"
         with vcr.use_cassette(cassette_name):
@@ -239,12 +241,7 @@ class TestSpecialCases:
 
     def test_boundary_zip_maximum(self):
         """Test maximum valid ZIP code"""
-        params = {
-            "zip": "99950",
-            "year": "2024",
-            "radius": "125",
-            "model": "Ioniq 5"
-        }
+        params = {"zip": "99950", "year": "2024", "radius": "125", "model": "Ioniq 5"}
 
         cassette_name = "boundary-zip-max.yaml"
         with vcr.use_cassette(cassette_name):
@@ -254,12 +251,7 @@ class TestSpecialCases:
 
     def test_boundary_radius_minimum(self):
         """Test minimum valid radius"""
-        params = {
-            "zip": "90210",
-            "year": "2024",
-            "radius": "1",
-            "model": "Ioniq 5"
-        }
+        params = {"zip": "90210", "year": "2024", "radius": "1", "model": "Ioniq 5"}
 
         cassette_name = "boundary-radius-min.yaml"
         with vcr.use_cassette(cassette_name):
@@ -269,12 +261,7 @@ class TestSpecialCases:
 
     def test_boundary_radius_maximum(self):
         """Test maximum valid radius"""
-        params = {
-            "zip": "90210",
-            "year": "2024",
-            "radius": "500",
-            "model": "Ioniq 5"
-        }
+        params = {"zip": "90210", "year": "2024", "radius": "500", "model": "Ioniq 5"}
 
         cassette_name = "boundary-radius-max.yaml"
         with vcr.use_cassette(cassette_name):
@@ -310,7 +297,7 @@ class TestVINEndpointErrors:
         params = {
             "vin": "KMHFG4JG0NA000000",  # Valid format but likely doesn't exist
             "model": "Ioniq 5",
-            "year": "2024"
+            "year": "2024",
         }
 
         cassette_name = "vin-nonexistent.yaml"

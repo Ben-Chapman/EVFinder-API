@@ -65,7 +65,9 @@ def mock_gcp_error_reporting():
     mock_client.report.return_value = None
 
     # Patch at the point of import in the logger module
-    with patch.dict("sys.modules", {"google.cloud.error_reporting": mock_error_reporting}):
+    with patch.dict(
+        "sys.modules", {"google.cloud.error_reporting": mock_error_reporting}
+    ):
         yield mock_error_reporting
 
 
