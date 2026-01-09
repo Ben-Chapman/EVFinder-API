@@ -1,6 +1,5 @@
-import pytest
-from fastapi.testclient import TestClient
 from faker import Faker
+from fastapi.testclient import TestClient
 
 from src.main import app
 from src.tests.test_helpers import program_vcr
