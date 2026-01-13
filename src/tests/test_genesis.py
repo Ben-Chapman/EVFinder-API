@@ -2,8 +2,8 @@ import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 
-from tests.test_helpers import program_vcr
-from main import app
+from src.main import app
+from src.tests.test_helpers import program_vcr
 
 client = TestClient(app)
 fake = Faker()
@@ -14,8 +14,8 @@ vcr = program_vcr()
     scope="module",
     name="test_cassette",
     params=[
-        "ElectrifiedG80",
-        "GV60",
+        "ELECTRIFIED-G80",  # Genesis Electrified G80
+        "GV60",  # Genesis GV60
     ],
 )
 def _test_cassette(request):
@@ -23,7 +23,12 @@ def _test_cassette(request):
     params = {"zip": "90210", "year": "2023", "radius": "125", "model": vehicle_model}
     headers = {"User-Agent": fake.user_agent()}
 
-    cassette_name = f"genesis-{vehicle_model}.yaml"
+    # Map to cassette names which use the old format
+    cassette_map = {
+        "ELECTRIFIED-G80": "genesis-ElectrifiedG80.yaml",
+        "GV60": "genesis-GV60.yaml",
+    }
+    cassette_name = cassette_map.get(vehicle_model, f"genesis-{vehicle_model}.yaml")
     with vcr.use_cassette(cassette_name):
         r = client.get("/api/inventory/genesis", headers=headers, params=params)
         # d = client.get("/api/dealer/genesis", headers=headers, params=params)
@@ -46,12 +51,12 @@ def test_genesis_inventory_response_is_json(test_cassette):
 
 def test_genesis_inventory_response_is_a_success(test_cassette):
     """Do the Genesis API results indicate success"""
-    assert (
-        len(test_cassette.json()["Vehicles"]) >= 1
-    ), "The number of vehicles returned was < 1"
-    assert test_cassette.json()["Vehicles"][0]["Veh"][
-        "VIN"
-    ], "The inventory response does not contain a VIN"
+    assert len(test_cassette.json()["Vehicles"]) >= 1, (
+        "The number of vehicles returned was < 1"
+    )
+    assert test_cassette.json()["Vehicles"][0]["Veh"]["VIN"], (
+        "The inventory response does not contain a VIN"
+    )
 
 
 def test_genesis_inventory_has_dealers():
@@ -65,6 +70,6 @@ def test_genesis_inventory_has_dealers():
     headers = {"User-Agent": fake.user_agent()}
 
     d = client.get("/api/dealer/genesis", headers=headers, params=params)
-    assert (
-        len(d.json()["dealers"]) >= 1
-    ), "API response was a Success but no dealers have inventory"
+    assert len(d.json()["dealers"]) >= 1, (
+        "API response was a Success but no dealers have inventory"
+    )

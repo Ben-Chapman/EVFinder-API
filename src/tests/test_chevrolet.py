@@ -2,8 +2,8 @@ import pytest
 from faker import Faker
 from fastapi.testclient import TestClient
 
-from tests.test_helpers import program_vcr
-from main import app
+from src.main import app
+from src.tests.test_helpers import program_vcr
 
 client = TestClient(app)
 vcr = program_vcr()
@@ -55,16 +55,16 @@ def test_chevrolet_inventory_response_is_json(test_cassette):
 
 def test_chevrolet_inventory_response_is_a_success(test_cassette):
     """The chevrolet API thinks our request was a success"""
-    assert test_cassette.json()["data"][
-        "listResponse"
-    ], "No data was found in the Chevrolet Inventory response"
+    assert test_cassette.json()["data"]["listResponse"], (
+        "No data was found in the Chevrolet Inventory response"
+    )
 
 
 def test_chevrolet_inventory_has_inventory(test_cassette):
     """Dealers with inventory are returned"""
-    assert (
-        len(test_cassette.json()["data"]["listResponse"]) >= 1
-    ), "API response was a Success but no dealers have inventory"
+    assert len(test_cassette.json()["data"]["listResponse"]) >= 1, (
+        "API response was a Success but no dealers have inventory"
+    )
 
 
 # def test_get_vin_detail():

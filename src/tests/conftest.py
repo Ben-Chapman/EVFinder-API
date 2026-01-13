@@ -1,14 +1,20 @@
 import os
 import time
+from unittest.mock import Mock, patch
 
+import pytest
 import vcr
 
-cassette_dir = "tests/cassettes"
+cassette_dir = os.path.join(os.path.dirname(__file__), "cassettes")
 
 
 def program_vcr():
+    # Create cassettes directory if it doesn't exist
+    if not os.path.exists(cassette_dir):
+        os.makedirs(cassette_dir)
+
     for cassette in os.listdir(cassette_dir):
-        if "yaml" in cassette:  # Only delete the casette files
+        if "yaml" in cassette:  # Only delete the cassette files
             delete_stale_cassette(cassette_name=cassette)
 
     _vcr = vcr.VCR(
@@ -41,3 +47,35 @@ def delete_stale_cassette(
     if file_age_in_sec > (delete_if_older_than_days * 60 * 60):
         print(f"Deleting {cassette_file}")
         os.remove(cassette_file)
+
+
+@pytest.fixture(autouse=True)
+def mock_gcp_error_reporting():
+    """Automatically mock GCP Error Reporting for all tests.
+
+    This fixture runs for every test and prevents real GCP API calls.
+    """
+    mock_error_reporting = Mock()
+    mock_client = Mock()
+
+    # Mock the Client class and its methods
+    mock_error_reporting.Client.return_value = mock_client
+    mock_error_reporting.HTTPContext = Mock()
+    mock_client.report.return_value = None
+
+    # Patch at the point of import in the logger module
+    with patch.dict(
+        "sys.modules", {"google.cloud.error_reporting": mock_error_reporting}
+    ):
+        yield mock_error_reporting
+
+
+@pytest.fixture
+def mock_gcp_metadata():
+    """Mock GCP metadata server responses for health check tests."""
+    return {
+        "instance": {
+            "id": "12345678901234",
+            "zone": "projects/123456789012/zones/us-central1-a",
+        }
+    }
