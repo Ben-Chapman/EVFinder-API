@@ -15,28 +15,23 @@ vcr = program_vcr()
     name="test_cassette",
     params=[
         "q4",  # Q4 e-tron
-        "q8etron",  # Q8 e-tron
+        "etrongt",  # e-tron GT
     ],
 )
 def _test_cassette(request):
     vehicle_model = request.param
 
-    # Audi requires geo parameter format: zip_radius_miles_defaultcity
     params = {
         "zip": "90210",
-        "year": "2024",
+        "year": "2026",
         "radius": "125",
         "model": vehicle_model,
-        "geo": "90210",
+        # geo is provided as "lat_lng" by the frontend
+        "geo": "34.06965_-118.396306",
     }
     headers = {"User-Agent": fake.user_agent()}
 
-    # Map to cassette names which use the old format
-    cassette_map = {
-        "q4": "audi-Q4_e-tron.yaml",
-        "q8etron": "audi-Q8_e-tron.yaml",
-    }
-    cassette_name = cassette_map.get(vehicle_model, f"audi-{vehicle_model}.yaml")
+    cassette_name = f"audi-{vehicle_model}.yaml"
     with vcr.use_cassette(cassette_name):
         r = client.get("/api/inventory/audi", headers=headers, params=params)
 
@@ -58,87 +53,58 @@ def test_audi_inventory_response_is_json(test_cassette):
 
 
 def test_audi_inventory_response_has_data(test_cassette):
-    """The Audi API response contains the expected data structure"""
+    """The Audi API response contains the expected data structure."""
     response_data = test_cassette.json()
     assert "data" in response_data, "Response does not contain 'data' key"
-    assert "getFilteredVehiclesForWormwood" in response_data["data"], (
-        "Response data does not contain 'getFilteredVehiclesForWormwood' key"
+    assert "stockCarSearch" in response_data["data"], (
+        "Response data does not contain 'stockCarSearch' key"
     )
 
 
-def test_audi_inventory_has_filter_results(test_cassette):
-    """Audi response includes filterResults with totalCount"""
+def test_audi_inventory_has_result_count(test_cassette):
+    """Audi response includes resultNumber indicating total available inventory."""
     response_data = test_cassette.json()
-    filter_results = response_data["data"]["getFilteredVehiclesForWormwood"][
-        "filterResults"
-    ]
+    stock_car_search = response_data["data"]["stockCarSearch"]
 
-    assert "totalCount" in filter_results, "filterResults does not contain 'totalCount'"
-    assert isinstance(filter_results["totalCount"], int), "totalCount is not an integer"
+    assert "resultNumber" in stock_car_search, (
+        "stockCarSearch does not contain 'resultNumber'"
+    )
+    assert isinstance(stock_car_search["resultNumber"], int), (
+        "resultNumber is not an integer"
+    )
 
 
-def test_audi_inventory_has_vehicles(test_cassette):
-    """Vehicles are returned in the response"""
+def test_audi_inventory_has_cars(test_cassette):
+    """Cars are returned in the response."""
     response_data = test_cassette.json()
-    vehicles = response_data["data"]["getFilteredVehiclesForWormwood"]["vehicles"]
+    cars = response_data["data"]["stockCarSearch"]["results"]["cars"]
 
-    assert isinstance(vehicles, list), "vehicles is not a list"
-    assert len(vehicles) >= 0, "vehicles list should exist (can be empty)"
+    assert isinstance(cars, list), "cars is not a list"
 
 
-def test_audi_inventory_vehicle_structure(test_cassette):
-    """Verify vehicle objects have expected keys"""
+def test_audi_inventory_car_structure(test_cassette):
+    """Verify car objects have expected keys."""
     response_data = test_cassette.json()
-    vehicles = response_data["data"]["getFilteredVehiclesForWormwood"]["vehicles"]
+    cars = response_data["data"]["stockCarSearch"]["results"]["cars"]
 
-    if len(vehicles) > 0:
-        vehicle = vehicles[0]
-        required_keys = ["id", "vin", "modelName", "modelYear", "dealerName"]
+    if len(cars) > 0:
+        car = cars[0]
+        assert "stockCar" in car, "Car missing 'stockCar' key"
 
+        stock_car = car["stockCar"]
+        required_keys = ["id", "vin", "model", "dealer"]
         for key in required_keys:
-            assert key in vehicle, f"Vehicle missing required key: {key}"
-
-
-def test_get_vin_detail(test_cassette):
-    """Test VIN detail endpoint with a vehicle ID from inventory"""
-    response_data = test_cassette.json()
-    vehicles = response_data["data"]["getFilteredVehiclesForWormwood"]["vehicles"]
-
-    if len(vehicles) == 0:
-        pytest.skip("No vehicles in inventory to test VIN detail")
-
-    try:
-        vehicle_id = vehicles[0]["id"]
-    except (KeyError, IndexError):
-        pytest.fail("Could not find a vehicle ID in the test cassette")
-
-    params = {"vehicleId": vehicle_id}
-    headers = {"User-Agent": fake.user_agent()}
-
-    cassette_name = "audi-vin-detail.yaml"
-    with vcr.use_cassette(cassette_name):
-        vin_data = client.get("/api/vin/audi", headers=headers, params=params)
-
-    assert vin_data.status_code == 200, (
-        f"VIN Detail API response status code was {vin_data.status_code}, "
-        "it was expected to be 200"
-    )
-
-    vin_response = vin_data.json()
-    assert "data" in vin_response, "VIN response missing 'data' key"
-    assert "getVehicleInfoForWormwood" in vin_response["data"], (
-        "VIN response missing 'getVehicleInfoForWormwood' key"
-    )
+            assert key in stock_car, f"stockCar missing required key: {key}"
 
 
 def test_audi_pagination_single_page():
-    """Test that single page responses (<=24 vehicles) work correctly"""
+    """Test that single page responses work correctly."""
     params = {
-        "zip": "99999",  # Remote zip likely to have few results
-        "year": "2024",
+        "zip": "00501",
+        "year": "2026",
         "radius": "10",
-        "model": "q4",  # Q4 e-tron
-        "geo": "99999",
+        "model": "q4",
+        "geo": "40.9226_-72.6369",
     }
     headers = {"User-Agent": fake.user_agent()}
 
@@ -148,43 +114,21 @@ def test_audi_pagination_single_page():
 
     assert r.status_code == 200
     response_data = r.json()
-    vehicles = response_data["data"]["getFilteredVehiclesForWormwood"]["vehicles"]
-    total_count = response_data["data"]["getFilteredVehiclesForWormwood"][
-        "filterResults"
-    ]["totalCount"]
+    stock_car_search = response_data["data"]["stockCarSearch"]
+    cars = stock_car_search["results"]["cars"]
+    total_count = stock_car_search["resultNumber"]
 
-    # Verify we don't have pagination artifacts
-    assert len(vehicles) <= 24 or len(vehicles) == total_count
-
-
-def test_audi_error_handling_invalid_geo():
-    """Test error handling with missing/invalid geo parameter"""
-    params = {
-        "zip": "90210",
-        "year": "2024",
-        "radius": "125",
-        "model": "q4",  # Q4 e-tron
-        # Missing geo parameter
-    }
-    headers = {"User-Agent": fake.user_agent()}
-
-    # This should still work as the backend might use default values
-    cassette_name = "audi-no-geo.yaml"
-    with vcr.use_cassette(cassette_name):
-        r = client.get("/api/inventory/audi", headers=headers, params=params)
-
-    # Response should be 200 but might have empty results
-    assert r.status_code in [200, 400, 422]
+    assert len(cars) <= total_count
 
 
 def test_audi_empty_inventory_results():
-    """Test handling of searches with no results"""
+    """Test handling of searches with no results."""
     params = {
-        "zip": "00501",  # Remote location
-        "year": "2024",
-        "radius": "1",  # Very small radius
-        "model": "rsetrongt",  # RS e-tron GT
-        "geo": "00501",
+        "zip": "00501",
+        "year": "2026",
+        "radius": "1",
+        "model": "rsetrongt",
+        "geo": "40.9226_-72.6369",
     }
     headers = {"User-Agent": fake.user_agent()}
 
@@ -194,8 +138,30 @@ def test_audi_empty_inventory_results():
 
     assert r.status_code == 200
     response_data = r.json()
-
-    # Should have valid structure even with no vehicles
     assert "data" in response_data
-    vehicles = response_data["data"]["getFilteredVehiclesForWormwood"]["vehicles"]
-    assert isinstance(vehicles, list)
+    cars = response_data["data"]["stockCarSearch"]["results"]["cars"]
+    assert isinstance(cars, list)
+
+
+def test_audi_vin_detail():
+    """VIN detail endpoint returns structured StockCarSearch data for a single VIN."""
+    params = {"vehicleId": "WAUJ8BFW5S7901084"}
+    headers = {"User-Agent": fake.user_agent()}
+
+    cassette_name = "audi-vin-detail.yaml"
+    with vcr.use_cassette(cassette_name):
+        r = client.get("/api/vin/audi", headers=headers, params=params)
+
+    assert r.status_code == 200
+    response_data = r.json()
+    assert "data" in response_data
+    assert "stockCarSearch" in response_data["data"]
+
+    cars = response_data["data"]["stockCarSearch"]["results"]["cars"]
+    assert isinstance(cars, list)
+    assert len(cars) > 0
+
+    stock_car = cars[0]["stockCar"]
+    assert "vin" in stock_car
+    assert "titleText" in stock_car
+    assert "colorInfo" in stock_car

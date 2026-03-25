@@ -161,7 +161,7 @@ def test_get_vin_detail(test_cassette):
         vin = vehicle["id"]
         model = vehicle["model"]
         year = str(vehicle["year"])
-    except (KeyError, IndexError):
+    except KeyError, IndexError:
         pytest.fail("Could not find vehicle data in the test cassette")
 
     params = {
