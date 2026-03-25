@@ -22,7 +22,7 @@ def _test_cassette(request):
 
     params = {
         "zip": "90210",
-        "year": "2024",
+        "year": "2026",
         "radius": "125",
         "model": vehicle_model,
     }
@@ -167,7 +167,7 @@ def test_bmw_large_page_size():
     """Test that BMW uses large page size (2000) to avoid pagination"""
     params = {
         "zip": "90210",
-        "year": "2024",
+        "year": "2026",
         "radius": "500",  # Large radius to potentially get many results
         "model": "9",
     }
@@ -189,7 +189,7 @@ def test_bmw_empty_inventory_results():
     """Test handling of searches with no results"""
     params = {
         "zip": "00501",  # Remote location
-        "year": "2024",
+        "year": "2026",
         "radius": "1",  # Very small radius
         "model": "9",
     }
@@ -213,7 +213,7 @@ def test_bmw_error_handling_invalid_model():
     """Test error handling with invalid model code"""
     params = {
         "zip": "90210",
-        "year": "2024",
+        "year": "2026",
         "radius": "125",
         "model": "INVALID",
     }

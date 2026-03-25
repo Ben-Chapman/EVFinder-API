@@ -79,13 +79,11 @@ async def get_bmw_vin_detail(req: Request) -> dict:
 
     vin = req.query_params.get("vin")
 
-    vin_post_data = (
-        {
-            "query": "query inventory { getInventoryByIdentifier("
-            + f'identifier: "{vin}")'
-            + " { result { code id dealerId dealerLocation vin totalMsrp name powertrain fuelType marketingText orderStatus technicalText acceleration horsepower milesPerGallon milesPerGallonEqv modelYear productionNumber sold hybridFlag sportsFlag vehicleDetailsPage destinationAndHandling qualifiedModelCode series { code name } bodyStyle { code name } engineDriveType { code name } options { name code optionPackageCodeKey price wholesalePrice optionType optionAttribute isPaint isUpholstery isPackage isTrim isAccessory isWheel isStandard isLine isTop isUni isMetallic isIndividual isMarketing } vehicleDetailsPage vehicleProcessingCenter isAtPmaDealer } dealerInfo { centerID newVehicleSales { dealerName distance longitude locationID dealerURL phoneNumber address { lineOne lineTwo city state zipcode } } } } }"  # noqa: B950
-        },
-    )
+    vin_post_data = {
+        "query": "query inventory { getInventoryByIdentifier("
+        + f'identifier: "{vin}")'
+        + " { result { code id dealerId dealerLocation vin totalMsrp name powertrain fuelType marketingText orderStatus technicalText acceleration horsepower milesPerGallon milesPerGallonEqv modelYear productionNumber initialCOSYURL sold hybridFlag sportsFlag vehicleDetailsPage destinationAndHandling cosy { panoramaViewUrlPart walkaround360DegViewUrlPart crops { lg md sm xl } } qualifiedModelCode series { code name } bodyStyle { code name } engineDriveType { code name } options { name code optionPackageCodeKey price wholesalePrice optionType optionAttribute isPaint isUpholstery isPackage isTrim isAccessory isWheel isStandard isLine isTop isUni isMetallic isIndividual isMarketing } vehicleDetailsPage vehicleProcessingCenter isAtPmaDealer packagesDisclaimer } dealerInfo { centerID newVehicleSales { dealerName distance longitude locationID dealerURL phoneNumber address { lineOne lineTwo city state zipcode } } } } }"  # noqa: B950
+    }
 
     async with AsyncHTTPClient(
         base_url=bmw_base_url,
@@ -95,8 +93,8 @@ async def get_bmw_vin_detail(req: Request) -> dict:
         v = await http.post(uri="/", headers=headers, post_data=vin_post_data)
         data = v.json()
 
-    if len(data[0]["data"]["getInventoryByIdentifier"]["result"]) > 0:
-        return send_response(response_data=data[0], cache_control_age=3600)
+    if len(data["data"]["getInventoryByIdentifier"]["result"]) > 0:
+        return send_response(response_data=data, cache_control_age=3600)
     else:
-        error_message = "An error occurred with the  BMW API"
+        error_message = "An error occurred with the BMW API"
         return error_response(error_message=error_message, error_data=data)
