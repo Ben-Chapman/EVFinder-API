@@ -216,7 +216,7 @@ def test_get_vin_detail(test_cassette):
         dealer_slug = response_data["dealerSlug"]
         model_slug = vehicle.get("modelSlug", "mustang-mach-e")
         pa_code = vehicle.get("paCode", "")
-    except (KeyError, IndexError):
+    except KeyError, IndexError:
         pytest.fail("Could not find vehicle data in the test cassette")
 
     params = {

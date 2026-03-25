@@ -134,7 +134,7 @@ def test_get_vin_detail(test_cassette):
 
     try:
         vin = result[0]["vin"]
-    except (KeyError, IndexError):
+    except KeyError, IndexError:
         pytest.fail("Could not find a VIN in the test cassette")
 
     params = {"vin": vin}
