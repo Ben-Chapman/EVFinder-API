@@ -149,7 +149,7 @@ async def get_gmc_inventory(
 
     try:
         inventory["facets"] = f.json()
-    except (ValueError, AttributeError):
+    except ValueError, AttributeError:
         pass
 
     _log_unknown_trims(all_hits, req)
