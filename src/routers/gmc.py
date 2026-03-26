@@ -19,129 +19,150 @@ from fastapi import APIRouter, Depends, Request
 from src.libs.common_query_params import CommonInventoryQueryParams
 from src.libs.http import AsyncHTTPClient
 from src.libs.responses import error_response, send_response
+from src.routers.logger import send_error_to_gcp
 
 router = APIRouter(prefix="/api")
 verify_ssl = True
-gmc_base_url = "https://cws.gm.com"
-page_size = 96
+gmc_base_url = "https://www.gmc.com/gmc/shopping/api"
 generic_error_message = "An error occurred obtaining GMC inventory results."
+
+# Known trim names for all GMC EVs. Any trim name returned by the inventory API
+# that is not in this set will trigger a GCP alert so the map can be kept current.
+_KNOWN_GMC_TRIMS: frozenset[str] = frozenset(
+    {
+        # Sierra EV
+        "Elevation Standard Range",
+        "Elevation Extended Range",
+        "Denali Standard Range",
+        "Extended Range Denali",
+        "Max Range Denali",
+        "AT4 Extended Range",
+        "AT4 Max Range",
+        "Denali Max Range",
+        # HUMMER EV Pickup
+        "2X",
+        "3X",
+    }
+)
+
+
+def _log_unknown_trims(hits: list[dict], request: Request) -> None:
+    """Log a GCP alert for each vehicle trim not present in _KNOWN_GMC_TRIMS.
+
+    Args:
+        hits: Raw vehicle records from the GMC inventory API.
+        request: The originating FastAPI request, used for alert context.
+    """
+    seen: set[str] = set()
+    for vehicle in hits:
+        trim = (vehicle.get("variant") or {}).get("name")
+        if trim and trim not in _KNOWN_GMC_TRIMS and trim not in seen:
+            seen.add(trim)
+            send_error_to_gcp(
+                f"GMC: unrecognized trim '{trim}' — add to _KNOWN_GMC_TRIMS "
+                "and gmcInteriorByTrim in gmcMappings.js.",
+                http_context={
+                    "method": "GET",
+                    "url": str(request.url),
+                    "user_agent": request.headers.get("User-Agent", ""),
+                    "status_code": 200,
+                },
+            )
 
 
 @router.get("/inventory/gmc")
 async def get_gmc_inventory(
     req: Request, req_params: CommonInventoryQueryParams = Depends()
 ) -> dict:
-    params = {
-        "conditions": "New",
-        "makes": "GMC",
-        "locale": "en_US",
-        "models": req_params.model,
-        "years": req_params.year,
-        "radius": req_params.radius,
-        "postalCode": req_params.zip,
-        "pageSize": page_size,
-        "sortby": "bestMatch:desc,distance:asc,netPrice:asc",
-        "includeNearMatches": "true",
-        "requesterType": "TIER_1_VSR",
-    }
     headers = {
         "User-Agent": req.headers.get("User-Agent"),
-        "Referer": "https://www.gmc.com/",
+        "referer": "https://www.gmc.com/",
+        "client": "T1_VSR",
+        "tenantId": "0",
+        "dealerId": "0",
+        "oemId": "GM",
+        "programId": "GMC",
     }
 
-    inventory_uri = "/vs-cws/vehshop/v2/vehicles"
+    post_data = {
+        "filters": {
+            "geo": {
+                "zipCode": req_params.zip,
+                "radius": req_params.radius,
+            },
+            "model": {"values": [req_params.model.lower()]},
+        },
+        "sort": {"name": "distance", "order": "ASC"},
+        "paymentTypes": ["CASH"],
+        "pagination": {"size": 100},
+    }
 
-    # Setup the HTTPX client to be used for the many API calls throughout this router
-    http = AsyncHTTPClient(base_url=gmc_base_url, timeout_value=30.0, verify=verify_ssl)
+    inventory_uri = "/aec-cp-discovery-api/p/v1/vehicles/search"
+    facets_uri = "/aec-cp-discovery-api/p/v1/vehicles/facets"
 
-    # Retrieve the initial batch of {page_size} vehicles
-    i = await http.get(uri=inventory_uri, headers=headers, params=params)
-    try:
-        inventory = i.json()
-    except ValueError:
-        return error_response(error_message=generic_error_message)
+    async with AsyncHTTPClient(
+        base_url=gmc_base_url, timeout_value=30.0, verify=verify_ssl
+    ) as http:
+        i = await http.post(uri=inventory_uri, headers=headers, post_data=post_data)
+        f = await http.post(uri=facets_uri, headers=headers, post_data={})
 
-    # Ensure the response back from the API has some status, indicating a successful
-    # API call
-    try:
-        inventory["resultsCount"]
-    except KeyError:
-        return error_response(
-            error_message=generic_error_message,
-            error_data=inventory,
-            status_code=500,
-        )
+        try:
+            inventory = i.json()
+        except ValueError:
+            return error_response(error_message=generic_error_message)
 
-    inventory_result_count = inventory.get("resultsCount")
-    # We have only one page of results, so just returning the JSON response back to the
-    # frontend.
-    if inventory_result_count <= page_size:
-        if not inventory.get("error"):
-            return send_response(response_data=inventory)
-    else:
-        # The GMC inventory API pages {page_size} vehicles at a time. Making N number of
-        # API requests, incremented by step.
-        begin_index = page_size
-        end_index = 0
-        step = page_size
-
-        urls_to_fetch = []
-
-        for i in range(begin_index, inventory_result_count, step):
-            begin_index = i
-
-            # Ensure we don't request more than the inventory_result_count of pages
-            # returned for this inventory request
-            if i + step < inventory_result_count:
-                end_index = i + step
-            else:
-                end_index = inventory_result_count
-
-            # Adding beginIndex and endIndex to the query params used to make subsequent
-            # API requests
-            remainder_inventory_params = {
-                **params,
-                "pageSize": end_index,
-            }
-
-            # Create a list of requests which will be passed to httpx
-            urls_to_fetch.append(
-                [
-                    inventory_uri,
-                    headers,
-                    remainder_inventory_params,
-                ]
-            )
-
-        remainder = await http.get(uri=urls_to_fetch)
-
-        # If we only have the initial API call and one additional API call, the response
-        # back from the http helper library is a httpx.Response object. If we have multiple
-        # additional API calls, the response back is a list. Catching this situation and
-        # throwing that single httpx.Response object into a list for further processing.
-        if type(remainder) is not list:
-            remainder = [remainder]
-
-        # Loop through the inventory results list
-        for api_result in remainder:
-            # When issuing concurrent API requests, some may come back with non-200
-            # responses (e.g. 500) and thus no JSON response data. Catching that condition
-            # and adding an item to the dict which is returned to the front end.
+        try:
+            all_hits = list(inventory["data"]["hits"])
+        except KeyError:
             try:
-                result = api_result.json()
-                inventory["vehicles"].append(result["vehicles"])
-            except AttributeError:
-                i["apiErrorResponse"] = True
+                inventory["errorDetails"]["key"]
+                return send_response(response_data={})
+            except Exception:
+                return error_response(
+                    error_message=generic_error_message,
+                    error_data=inventory,
+                    status_code=500,
+                )
 
-    await http.close()
+        # The GMC API caps page size at 20. Fetch remaining pages via cursor token
+        # until all vehicles matching the search have been collected.
+        while next_token := (
+            inventory.get("data", {}).get("pagination", {}).get("nextPageToken")
+        ):
+            page_post_data = {
+                **post_data,
+                "pagination": {
+                    **post_data["pagination"],
+                    "nextPageToken": next_token,
+                },
+            }
+            page = await http.post(
+                uri=inventory_uri, headers=headers, post_data=page_post_data
+            )
+            try:
+                inventory = page.json()
+                all_hits.extend(inventory.get("data", {}).get("hits", []))
+            except ValueError:
+                break
+
+    inventory["data"]["hits"] = all_hits
+
+    try:
+        inventory["facets"] = f.json()
+    except ValueError, AttributeError:
+        pass
+
+    _log_unknown_trims(all_hits, req)
+
     return send_response(response_data=inventory, cache_control_age=3600)
 
 
 @router.get("/vin/gmc")
 async def get_gmc_vin_detail(req: Request) -> dict:
-    # Make a call to the GMC API
+    # TODO: Update this endpoint to the new GMC API once the VIN detail endpoint is identified
+    _vin_base_url = "https://cws.gm.com"
     async with AsyncHTTPClient(
-        base_url=gmc_base_url, timeout_value=30.0, verify=verify_ssl
+        base_url=_vin_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         params = {
             "vin": req.query_params.get("vin"),
@@ -150,7 +171,10 @@ async def get_gmc_vin_detail(req: Request) -> dict:
             "requesterType": "TIER_1",
             "locale": "en_US",
         }
-        headers = {"User-Agent": req.headers.get("User-Agent"), "referer": gmc_base_url}
+        headers = {
+            "User-Agent": req.headers.get("User-Agent"),
+            "referer": _vin_base_url,
+        }
 
         v = await http.get(
             uri="/vs-cws/vehshop/v2/vehicle",
