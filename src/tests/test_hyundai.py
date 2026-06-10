@@ -9,6 +9,11 @@ client = TestClient(app)
 fake = Faker()
 vcr = program_vcr()
 
+# The BSI search API is a POST endpoint that paginates results, issuing one request
+# per page with a different JSON body. Match recorded interactions on the request
+# body so each page replays its own response.
+bsi_match_on = ["method", "scheme", "host", "port", "path", "query", "body"]
+
 
 @pytest.fixture(
     scope="module",
@@ -20,11 +25,11 @@ vcr = program_vcr()
 def _test_cassette(request):
     vehicle_model = request.param
 
-    params = {"zip": "00501", "year": "2023", "radius": "125", "model": vehicle_model}
+    params = {"zip": "90210", "year": "2026", "radius": "25", "model": vehicle_model}
     headers = {"User-Agent": fake.user_agent()}
 
     cassette_name = f"hyundai-{vehicle_model}.yaml"
-    with vcr.use_cassette(cassette_name):
+    with vcr.use_cassette(cassette_name, match_on=bsi_match_on):
         r = client.get("/api/inventory/hyundai", headers=headers, params=params)
 
     return r
@@ -45,35 +50,36 @@ def test_hyundai_inventory_response_is_json(test_cassette):
 
 
 def test_hyundai_inventory_response_is_a_success(test_cassette):
-    """The Hyundai API thinks our request was a success"""
+    """The EV Finder API reports the search was a success"""
     assert test_cassette.json()["status"] == "SUCCESS", (
         "'SUCCESS' was not found in the Hyundai Inventory response"
     )
 
 
-def test_hyundai_inventory_has_dealers(test_cassette):
-    """Dealers with inventory are returned"""
-    assert len(test_cassette.json()["data"][0]["dealerInfo"]) >= 1, (
-        "API response was a Success but no dealers have inventory"
+def test_hyundai_inventory_has_vehicles(test_cassette):
+    """Vehicles are returned as a flat list under the data key"""
+    data = test_cassette.json()["data"]
+    assert isinstance(data, list) and len(data) >= 1, (
+        "API response was a Success but no vehicles were returned"
     )
 
 
-def test_hyundai_inventory_dealer_has_inventory(test_cassette):
-    """Dealers have inventory"""
-    assert len(test_cassette.json()["data"][0]["dealerInfo"][0]["vehicles"]) >= 1, (
-        "API response was a Success but no dealers have inventory"
-    )
+def test_hyundai_inventory_vehicles_have_required_fields(test_cassette):
+    """Each vehicle carries the fields the inventory table renders"""
+    vehicle = test_cassette.json()["data"][0]
+    for field in ("vin", "msrp", "exteriorColor", "drivetrain", "dealerName"):
+        assert field in vehicle, (
+            f"Expected field '{field}' was missing from a vehicle record"
+        )
 
 
 def test_get_vin_detail(test_cassette):
     try:
-        vin_for_test = test_cassette.json()["data"][0]["dealerInfo"][0]["vehicles"][0][
-            "vin"
-        ]
+        vin_for_test = test_cassette.json()["data"][0]["vin"]
     except Exception:
         pytest.fail("Could not find a VIN in the test cassette")
 
-    params = {"year": "2023", "model": "Ioniq+5", "vin": vin_for_test}
+    params = {"year": "2026", "model": "Ioniq+5", "vin": vin_for_test}
     headers = {"User-Agent": fake.user_agent()}
     vin_data = client.get("/api/vin/hyundai", headers=headers, params=params)
 
