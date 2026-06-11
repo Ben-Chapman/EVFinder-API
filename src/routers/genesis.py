@@ -112,20 +112,13 @@ async def get_genesis_inventory(
         )
 
     result = payload.get("result") or {}
-
-    # A non-SUCCESS result status indicates the API rejected the search rather than
-    # simply returning no inventory.
-    if result.get("status") not in (None, "SUCCESS"):
-        return error_response(
-            error_message="Received invalid data from the Genesis API",
-            error_data=payload,
-            status_code=400,
-        )
-
     vehicles = [slim_vehicle(v) for v in result.get("vehicles") or []]
 
     # If no vehicles were returned, there is no inventory. Return an empty dict response
-    # which the UI uses to display the no inventory message.
+    # which the UI uses to display the no inventory message. An empty search yields a
+    # 200 response whose result.status is a "No records found" message (with no
+    # "vehicles" key) rather than "SUCCESS", so a missing/empty vehicles list is the
+    # reliable signal for no inventory.
     if not vehicles:
         return send_response(response_data={})
 
