@@ -13,8 +13,6 @@
 # You should have received a copy of the GNU General Public License along with The EV Finder.
 # If not, see <https://www.gnu.org/licenses/>.
 
-import datetime
-
 from fastapi import APIRouter, Depends, Request
 
 from src.libs.common_query_params import CommonInventoryQueryParams
@@ -25,18 +23,54 @@ router = APIRouter(prefix="/api")
 verify_ssl = True
 genesis_base_url = "https://www.genesis.com"
 
+genesis_search_uri = "/bin/api/v2/inventory/search"
+
+# How many dealers to search across. The v2 API honors the radius filter, so this
+# only caps the number of dealers considered, not the search distance.
+genesis_max_dealers = 100
+
+# Each v2 vehicle record carries fields the inventory UI never renders. Project each
+# record down to just the fields the frontend maps onto its table columns (keeping the
+# OEM field names; the frontend does the OEM -> column-key mapping).
+genesis_vehicle_fields = (
+    "VIN",
+    "ModelYear",
+    "Model",
+    "TrimDesc",
+    "SortablePrice",
+    "FormattedPrice",
+    "ExtColorDesc",
+    "IntColor",
+    "Drivetrain",
+    "PlannedDeliveryDate",
+    "DlrName",
+    "Distance",
+)
+
+
+def slim_vehicle(vehicle: dict) -> dict:
+    """Project a v2 vehicle record down to the fields the inventory UI renders.
+
+    Args:
+        vehicle: A single vehicle record from the v2 search response.
+
+    Returns:
+        A dict containing only the fields in genesis_vehicle_fields that are present.
+    """
+    return {key: vehicle[key] for key in genesis_vehicle_fields if key in vehicle}
+
 
 @router.get("/inventory/genesis")
 async def get_genesis_inventory(
     req: Request,
     common_params: CommonInventoryQueryParams = Depends(),
 ) -> dict:
-    """Makes a request to the Genesis Inventory API and returns a JSON object containing
-    the inventory results for a given vehicle model and zip code.
+    """Makes a request to the Genesis v2 inventory API and returns the inventory results
+    for a given vehicle model and zip code.
 
-    The Genesis API does not accept a search radius nor a model year, rather a maxdealers
-    URI path segment. The EV Finder frontend deals with filtering the results to display
-    the relevant information for the search performed.
+    The v2 API does not accept a model year; it returns current inventory filtered by
+    zip code and radius. The EV Finder frontend filters the results by the model year
+    selected for the search.
 
     Args:
         req (Request): The HTTP request from the EV Finder application.
@@ -47,10 +81,14 @@ async def get_genesis_inventory(
         dict: A JSON object containing the inventory results for the given search.
     """
 
-    zipcode = common_params.zip
-    modelname = common_params.model
-    maxdealers = 50
-    todays_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    # The v2 search API identifies models by a lowercase slug (e.g. "gv60",
+    # "electrified-g80"), while the UI sends them upper-cased.
+    params = {
+        "model": common_params.model.lower(),
+        "zip": common_params.zip,
+        "radius": common_params.radius,
+        "maxdealers": genesis_max_dealers,
+    }
 
     headers = {
         "User-Agent": req.headers.get("User-Agent"),
@@ -61,25 +99,30 @@ async def get_genesis_inventory(
         base_url=genesis_base_url, timeout_value=30.0, verify=verify_ssl
     ) as http:
         inv = await http.get(
-            uri=(
-                f"/bin/api/v1/inventory.json/{modelname}/{zipcode}/{maxdealers}/{todays_date}"
-            ),
+            uri=genesis_search_uri,
             headers=headers,
+            params=params,
         )
 
-        inventory_data = inv.json()
+    try:
+        payload = inv.json()
+    except ValueError:
+        return error_response(
+            error_message=f"An error occurred with the Genesis API: {inv.text}"
+        )
 
-        if len(inventory_data) > 0:
-            return send_response(
-                response_data=inventory_data,
-            )
-        else:
-            error_message = (
-                "An error occurred obtaining vehicle inventory for this search."
-            )
-            return error_response(
-                error_message=error_message, error_data=inventory_data
-            )
+    result = payload.get("result") or {}
+    vehicles = [slim_vehicle(v) for v in result.get("vehicles") or []]
+
+    # If no vehicles were returned, there is no inventory. Return an empty dict response
+    # which the UI uses to display the no inventory message. An empty search yields a
+    # 200 response whose result.status is a "No records found" message (with no
+    # "vehicles" key) rather than "SUCCESS", so a missing/empty vehicles list is the
+    # reliable signal for no inventory.
+    if not vehicles:
+        return send_response(response_data={})
+
+    return send_response(response_data={"status": "SUCCESS", "data": vehicles})
 
 
 @router.get("/vin/genesis")

@@ -10,7 +10,7 @@ The following is a set of guidelines for contributing to the EV Finder. We want 
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by [The EV Finder Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. 
+This project and everyone participating in it is governed by [The EV Finder Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
 
 ## How Can I Contribute?
 ### Reporting Bugs
@@ -22,7 +22,7 @@ When creating a new issue, explain the problem and include additional details to
 > - **Describe the exact steps which reproduce the problem** in as many details as possible. For example, start by explaining the set of steps taken which reproduces the bug. Please don't forget to visit the EV Finder's [debug](https://theevfinder.com/debug) page which will provide relevant information for your exact environment.
 > - **Explain which behavior you expected to see instead and why.**
 > - If able, please include a screenshot or video demonstrating the problem.
-  
+
 ### Proposing New Features
 
 This section guides you through submitting a feature request for the EV Finder, including completely new features and minor improvements to existing functionality.
@@ -30,12 +30,12 @@ This section guides you through submitting a feature request for the EV Finder, 
 Before creating a feature request, please check [this list](https://github.com/Ben-Chapman/EVFinder/labels/enhancement) as you might find out that you don't need to create one. When you are creating an enhancement suggestion, please include as many details as possible. Fill in [the feature request template](https://github.com/Ben-Chapman/EVFinder/issues/new?template=feature-request.md), including the steps that you imagine you would take if the feature you're requesting existed.
 
 > Feature requests are tracked as [GitHub issues](https://github.com/Ben-Chapman/EVFinder/issues/new?template=feature-request.md).
-> 
+>
 > * **Use a clear and descriptive title** for the issue to identify the suggestion.
 > * **Provide a step-by-step description of the suggested enhancement** in as many details as possible.
-> * **Provide specific examples to demonstrate the steps**. 
+> * **Provide specific examples to demonstrate the steps**.
 > * **Describe the current behavior** and **explain which behavior you expected to see instead** and why.
-> * **If possible include annotated screenshots** which help you demonstrate the steps or point out the part of the EV Finder which the suggestion is related to. 
+> * **If possible include annotated screenshots** which help you demonstrate the steps or point out the part of the EV Finder which the suggestion is related to.
 > * **Explain why this enhancement would be useful** to most EVFinder users.
 
 ### Submitting a Fix
